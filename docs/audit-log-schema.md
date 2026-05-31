@@ -19,8 +19,8 @@ Event types and their extra fields:
 | `model_load` | `model`, `size_mb`, `quant`, `source` (local/peer), `load_ms` |
 | `model_unload` | `model` |
 | `ocr_start` / `ocr_end` | `image_hash`; end adds `text_len`, `latency_ms` |
-| `normalize_result` | `raw_text`, `generic_guess`, `rxcui` (or null), `matched` (bool) |
-| `ddinter_lookup` | `drug_a_rxcui`, `drug_b_rxcui`, `severity` (Major/Moderate/Minor/none), `source_row_id` |
+| `normalize_result` | `raw_text`, `generic` (or null), `matched` (bool) |
+| `ddinter_lookup` | `drug_a`, `drug_b`, `severity` (Major/Moderate/Minor/Unknown/none), `ddinter_id_a`, `ddinter_id_b` |
 | `medpsy_start` / `medpsy_end` | `model`, `prompt_tokens`; end adds `completion_tokens`, `ttft_ms`, `tokens_per_sec` |
 | `abstain` | `reason` (`unresolved_drug` / `not_in_dataset`) |
 | `delegation_start` / `delegation_end` | `peer_pubkey` (short), `model`; end adds `ttft_ms`, `tokens_per_sec`, `recovered` (bool, true if it survived a mid-stream drop) |

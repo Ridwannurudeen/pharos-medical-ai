@@ -55,7 +55,7 @@ Lead runs Gate A (anchor + delegation + offline pull). App Dev pairs on Gate B (
 
 **Lead lane**
 - Build the **audit-log + resource-log writer first** (`docs/audit-log-schema.md`) — every later step writes to it.
-- `scripts/build-data.*`: join DDInter + RxNorm Prescribable + DrugBank Vocabulary → indexed `data/pharos.db` keyed by RxCUI (severity, mechanism, management, `source_row_id` for citation).
+- `scripts/build-data.ts` *(built early)*: DDInter 2.0 → `data/pharos.db` keyed by **normalized generic name** (severity + DDInter ids for citation; curated synonym layer). No RxCUI/mechanism — see `docs/data-pipeline.md`.
 - Implement `core/`: `ocrLabel` (QVAC `ocr`, `OCR_LATIN_RECOGNIZER_1`), `normalize` (generic-name → RxCUI + abstain gate), `lookupInteractions`, `explain` (MedPsy-1.7B, strict "explain the retrieved fact, do not invent" template), `scanPipeline` orchestration.
 - **Ship `core/` mocks on Day 2** so B is unblocked; replace with real impls through the week.
 

@@ -71,7 +71,7 @@ embed({ modelId, text }, rpcOptions?): Promise<{ embedding: number[]; stats? }> 
 ragIngest({ modelId, documents: string[], workspace?, onProgress? }): Promise<{ droppedIndices, processed }>
 ragSearch({ modelId, query, topK, workspace? }): Promise<RagSearchResult[]>
 ```
-Note: our grounding is primarily a **deterministic DDInter lookup keyed by RxCUI**, not vector RAG. `ragSearch` is a secondary path (fuzzy synonym matching) — keep the authoritative interaction retrieval exact, not embedding-based.
+Note: our grounding is primarily a **deterministic DDInter lookup keyed by normalized drug name**, not vector RAG. `ragSearch` is a secondary path (fuzzy synonym matching) — keep the authoritative interaction retrieval exact, not embedding-based.
 
 ## Delegated inference (mesh tier) — ⚠️ **plan corrections inside**
 
