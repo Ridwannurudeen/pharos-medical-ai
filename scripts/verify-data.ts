@@ -4,19 +4,18 @@
 import { DatabaseSync } from "node:sqlite";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
-import { createGrounding, type QueryRunner } from "../core/grounding.ts";
+import { createGrounding } from "../core/grounding.ts";
 import { createAuditLog, memorySink } from "../core/audit.ts";
+import { createScanPipeline } from "../core/pipeline.ts";
+import { nodeQueryRunner } from "../core/adapters-node.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const db = new DatabaseSync(join(ROOT, "data", "pharos.db"), {
   readOnly: true,
 });
 
-// node:sqlite adapter for the platform-agnostic QueryRunner the core expects.
-// Cast at the driver boundary: our params are always SQLite scalars.
-type SqlParam = string | number | bigint | null | Uint8Array;
-const query: QueryRunner = (sql, params) =>
-  db.prepare(sql).all(...(params as SqlParam[])) as Record<string, unknown>[];
+// the real Node adapter (also used by the anchor/CLI) — exercises core/adapters-node.ts
+const query = nodeQueryRunner(db);
 const g = createGrounding(query);
 
 let failures = 0;
@@ -119,6 +118,88 @@ check(
   "offline",
 );
 check("audit record carries custom fields", rec.severity, "Major");
+
+// --- scanPipeline orchestration: real pipeline + real grounding + a fake OCR/MedPsy engine ---
+const fakeClock = {
+  isoNow: () => "2026-06-01T00:00:00.000Z",
+  monotonicMs: () => 0,
+};
+const makeEngine = (generic: string | null) => ({
+  ocr: async () => ({ text: "ASPIRIN 81 mg", latencyMs: 10 }),
+  normalize: async () => ({ generic }),
+  explain: async () => ({
+    text: "Aspirin with warfarin raises bleeding risk.",
+  }),
+});
+async function runPipeline(generic: string | null) {
+  const mem = memorySink();
+  const a = createAuditLog({
+    deviceId: "pipe",
+    sink: mem.sink,
+    clock: fakeClock,
+  });
+  const scanPipeline = createScanPipeline({
+    engine: makeEngine(generic),
+    grounding: g,
+    audit: a,
+    clock: fakeClock,
+  });
+  const result = await scanPipeline("img", [{ name: "Warfarin" }]);
+  const events = mem.lines.map(
+    (l) => (JSON.parse(l) as { event: string }).event,
+  );
+  return { result, events };
+}
+
+// happy path: aspirin label + warfarin shelf -> Major, cited, explained
+const hp = await runPipeline("Aspirin");
+check("pipeline: not abstained on known drug", hp.result.abstained, false);
+check(
+  "pipeline: returns Major interaction",
+  hp.result.interactions[0]?.severity,
+  "Major",
+);
+check(
+  "pipeline: explanation populated",
+  hp.result.explanation.length > 0,
+  true,
+);
+check(
+  "pipeline: emits scan_result event",
+  hp.events.includes("scan_result"),
+  true,
+);
+check(
+  "pipeline: emits ddinter_lookup event",
+  hp.events.includes("ddinter_lookup"),
+  true,
+);
+
+// abstain — generic not extracted from OCR text
+const ab1 = await runPipeline(null);
+check(
+  "pipeline: abstains when no generic extracted",
+  ab1.result.abstained,
+  true,
+);
+check(
+  "pipeline: reason = unresolved_drug",
+  ab1.result.abstainReason,
+  "unresolved_drug",
+);
+
+// abstain — generic extracted but not in DDInter
+const ab2 = await runPipeline("notarealdrugxyz");
+check(
+  "pipeline: abstains when drug not in DDInter",
+  ab2.result.abstained,
+  true,
+);
+check(
+  "pipeline: reason = not_in_dataset",
+  ab2.result.abstainReason,
+  "not_in_dataset",
+);
 
 db.close();
 console.log(
