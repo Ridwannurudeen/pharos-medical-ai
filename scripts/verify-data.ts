@@ -7,6 +7,7 @@ import { fileURLToPath } from "node:url";
 import { createGrounding } from "../core/grounding.ts";
 import { createAuditLog, memorySink } from "../core/audit.ts";
 import { createScanPipeline } from "../core/pipeline.ts";
+import { createNormalizer } from "../core/normalize.ts";
 import { nodeQueryRunner } from "../core/adapters-node.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -200,6 +201,63 @@ check(
   ab2.result.abstainReason,
   "not_in_dataset",
 );
+
+// --- normalizer: extract a known drug name from label text (model-free, against real vocab) ---
+const normalizer = createNormalizer(g);
+check(
+  "normalize: 'ASPIRIN 81 mg' -> acetylsalicylic acid (synonym)",
+  normalizer("ASPIRIN 81 mg").generic,
+  "acetylsalicylic acid",
+);
+check(
+  "normalize: multi-word 'Acetylsalicylic acid 100mg'",
+  normalizer("Acetylsalicylic acid 100mg").generic,
+  "acetylsalicylic acid",
+);
+check(
+  "normalize: 'Take Warfarin 5mg daily' -> warfarin",
+  normalizer("Take Warfarin 5mg daily").generic,
+  "warfarin",
+);
+check(
+  "normalize: no known drug -> null (abstain)",
+  normalizer("just some random label text").generic,
+  null,
+);
+
+// --- full solo chain with the REAL normalizer + real grounding (only OCR/MedPsy faked) ---
+{
+  const mem = memorySink();
+  const fixedClock = {
+    isoNow: () => "2026-06-01T00:00:00.000Z",
+    monotonicMs: () => 0,
+  };
+  const a = createAuditLog({
+    deviceId: "pipe",
+    sink: mem.sink,
+    clock: fixedClock,
+  });
+  const engine = {
+    ocr: async () => ({ text: "ASPIRIN 81 mg tablets", latencyMs: 5 }),
+    normalize: async (t: string) => normalizer(t),
+    explain: async () => ({
+      text: "Aspirin with warfarin raises bleeding risk.",
+    }),
+  };
+  const sp = createScanPipeline({
+    engine,
+    grounding: g,
+    audit: a,
+    clock: fixedClock,
+  });
+  const r = await sp("img", [{ name: "Warfarin" }]);
+  check("pipeline+real normalize: not abstained", r.abstained, false);
+  check(
+    "pipeline+real normalize: Major interaction",
+    r.interactions[0]?.severity,
+    "Major",
+  );
+}
 
 db.close();
 console.log(
