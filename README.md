@@ -19,18 +19,17 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 
 ```
 pharos/
-├─ app/          # React Native (Expo) phone app — solo tier + mesh consumer   [created at build start, June 1]
-├─ anchor/       # Node.js laptop "anchor" — mesh provider running MedPsy-4B    [created at build start]
-├─ shared/       # shared types, audit-log writer, delegation protocol contract [created at build start]
-├─ data/         # dataset bundling (DDInter, RxNorm, DrugBank Vocabulary) — see data/README.md
-├─ tests/fixtures/ # verified demo label images + expected outputs              [created at build start]
-├─ scripts/      # `npm run verify` reproducibility harness                     [created at build start]
-├─ docs/         # log schemas, data prep, design notes
-├─ NOTICE        # third-party data/model license attributions
-└─ LAUNCH-CHECKLIST.md
+├─ core/         # engine API + types (+ audit-log writer) — Lead. Mocks shipped; real impls June 1
+├─ scripts/      # fetch-data · build-data · verify-data — data pipeline + reproducibility harness
+├─ data/         # dataset sourcing + the generated pharos.db (gitignored; `npm run data`) — see data/README.md
+├─ app/          # React Native (Expo) phone app — solo tier + mesh consumer      [June 1]
+├─ anchor/       # Node.js laptop "anchor" — mesh provider running MedPsy-4B       [June 1]
+├─ tests/fixtures/ # verified demo label images + expected outputs                 [June 1]
+├─ docs/         # SDK reference, data pipeline, log schemas, lane brief, design notes
+├─ NOTICE · LICENSE · ROADMAP.md · LAUNCH-CHECKLIST.md
 ```
 
-The `app/`, `anchor/`, `shared/`, `scripts/` and `tests/` code is written during the judged build period (June 1+). This scaffold holds only setup, data, and verification groundwork.
+`app/`, `anchor/`, and `tests/` are written during the judged build period (June 1+). `core/` (mocked), `scripts/`, and the data pipeline were built early as **disclosed prior work**.
 
 ## Stack (planned)
 
@@ -43,10 +42,14 @@ The `app/`, `anchor/`, `shared/`, `scripts/` and `tests/` code is written during
 
 ## Setup
 
-_To be filled in during the build. High level:_
-1. `npm install @qvac/sdk` (phone dev build + laptop anchor).
-2. Stage datasets and models — see [`data/README.md`](data/README.md).
-3. Run the Day-1 spike (`day1-spike.md`) to confirm the P2P + grounded-chain gates before committing the mesh tier.
+**Data + verification (works today — needs only Node ≥24, zero runtime deps):**
+1. `npm run data` — fetch DDInter and build `data/pharos.db`.
+2. `npm run verify` — assert the grounded chain (8/8 checks).
+3. `npm install` then `npm run typecheck` — type-check `core/` + `scripts/` (install is only needed for this step).
+
+**App + mesh (June 1):**
+4. `npm install @qvac/sdk` (phone dev build + laptop anchor); download the MedPsy GGUFs.
+5. Run the Day-1 spike (`day1-spike.md`) to confirm the P2P + grounded-chain gates before committing the mesh tier.
 
 ## Reproducibility (required by judges)
 

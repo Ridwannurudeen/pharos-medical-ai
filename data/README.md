@@ -30,4 +30,4 @@ RxNorm is US/English-centric, so an OCR'd foreign **brand** name may not resolve
 3. If no confident match → **abstain** ("can't verify this one, consult a pharmacist"). Never guess.
 
 ## Build artifact
-`scripts/build-data.*` (written at build start) should join DDInter + RxNorm into a single indexed `data/pharos.db` (SQLite) keyed by RxCUI, with severity and a source-row id for provenance/citation.
+`scripts/build-data.ts` builds `data/pharos.db` (SQLite) from the DDInter CSVs — keyed by **normalized generic name**, with severity, DDInter ids (provenance), and a curated synonym table. `npm run data` fetches + builds; `npm run verify` checks it. (No RxCUI key — RxNorm isn't on the critical path; see [`../docs/data-pipeline.md`](../docs/data-pipeline.md).)

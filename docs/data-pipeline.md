@@ -34,7 +34,7 @@
 ### DrugBank Vocabulary (CC0) — optional, deferred
 Extra brand/international synonyms. The open-data download typically requires a free DrugBank account. Same role as RxNorm (widen name matching), same "enhancement, not blocker" status.
 
-## `pharos.db` schema (SQLite, built June 1)
+## `pharos.db` schema (SQLite — built by `npm run build-data`)
 
 ```sql
 -- 160,235 rows. Pair stored normalized + ordered (a < b) for stable lookup.
@@ -63,7 +63,7 @@ CREATE INDEX idx_syn ON synonyms(synonym);
 
 **Normalization rule (one function, both sides):** `norm(s) = s.trim().toLowerCase()` (extend later: strip salts/forms like "hydrochloride", collapse whitespace). The build script and the runtime lookup MUST use the **same** `norm()`.
 
-## Build steps (`scripts/build-data.*`, June 1)
+## Build steps (`scripts/build-data.ts`)
 1. Read all 8 DDInter CSVs; for each row, `norm(Drug_A)`, `norm(Drug_B)`; order the pair so `a < b`.
 2. De-dup pairs (160,235 expected). On conflict, keep the **most severe** Level (Major > Moderate > Minor > Unknown) so a pair never under-reports.
 3. Populate `interactions` + `drugs`. Write `data/pharos.db`.

@@ -12,6 +12,11 @@
     "fetch-data": "node scripts/fetch-data.ts",
     "build-data": "node scripts/build-data.ts",
     "data": "npm run fetch-data && npm run build-data",
-    "verify": "node scripts/verify-data.ts"
+    "verify": "node scripts/verify-data.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.19",
+    "typescript": "^5.9.3"
   }
 }
