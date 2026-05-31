@@ -7,7 +7,7 @@ All interaction warnings are **retrieved** from these datasets and merely *expla
 Large raw files live under `data/raw/` and are git-ignored. Commit only the processed, app-ready artifact (a compact SQLite DB or JSON) and the build script that produces it.
 
 ## 1. DDInter 2.0 — interactions + severity
-- **What:** drug-drug interactions with a severity `Level`. **Verified 2026-05-31:** the public CSVs are **name + severity only** — 160,235 distinct pairs across 2,496 generic drugs, `Level` ∈ Major/Moderate/Minor/**Unknown**; **no** mechanism/management text and **no** RxCUI/DrugBank mapping (the earlier description overstated this). Full grounding design: [`../docs/data-pipeline.md`](../docs/data-pipeline.md).
+- **What:** drug-drug interactions with a severity `Level`. **Verified 2026-05-31:** the public CSVs are **name + severity only** — 160,235 distinct pairs across **1,939** generic drugs, `Level` ∈ Major/Moderate/Minor/**Unknown**; **no** mechanism/management text and **no** RxCUI/DrugBank mapping (the earlier description overstated this). Full grounding design: [`../docs/data-pipeline.md`](../docs/data-pipeline.md).
 - **License:** CC BY-NC 4.0 (non-commercial, attribution). See `NOTICE`.
 - **Get it:** download the CSVs from https://ddinter2.scbdd.com (no login).
 - **Use:** the core interaction table.

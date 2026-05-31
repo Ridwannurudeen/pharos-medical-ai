@@ -15,8 +15,9 @@ dist/
 *.gguf
 models/
 
-# raw datasets (commit only the processed artifact, not the source dumps)
+# datasets — raw dumps AND the generated DB (~18MB). Regenerate with: npm run data
 data/raw/
+data/pharos.db
 
 # local env & secrets
 .env

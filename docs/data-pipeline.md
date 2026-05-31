@@ -1,8 +1,8 @@
 # Data pipeline — grounding design (`pharos.db`)
 
-> Design for the Lead's data lane. Implementation (`scripts/build-data.*` → `data/pharos.db`) is **June 1+** (judged). The datasets and these verified facts are pre-build prior work (disclose as such).
+> Design **and reproducible build** for the Lead's data lane. **Reproduce:** `npm run data` (fetch DDInter + build) → `data/pharos.db`, then `npm run verify` (8/8 grounded-chain checks). The raw CSVs and the ~18MB `pharos.db` are **gitignored** (regenerated, not committed). Built early **2026-05-31** at the team's decision — disclose as prior work.
 >
-> **Verified 2026-05-31** by downloading and inspecting the real files — not from memory.
+> **Verified 2026-05-31** by downloading, parsing, and building from the real files — not from memory.
 
 ## What we actually have (verified, not assumed)
 
@@ -15,13 +15,16 @@
 |---|---|
 | Raw rows (all files) | 222,383 |
 | **Distinct unordered drug pairs** | **160,235** |
-| Distinct drug names (generic) | 2,496 |
-| Severity `Level` values | Major 33,896 · Moderate 130,367 · Minor 10,938 · **Unknown 47,182** |
+| Distinct drug names (generic) | **1,939** |
+| Severity — raw rows (222,383) | Major 33,896 · Moderate 130,367 · Minor 10,938 · Unknown 47,182 |
+| Severity — **stored pairs** (160,235, most-severe-wins) | Major 26,914 · Moderate 96,675 · Minor 6,833 · **Unknown 29,813** |
+
+(Earlier I cited 2,496 drugs — that was a naive `split(",")` artifact; ~1,252 rows quote names containing commas, e.g. `"Thyroid, porcine"`. The build uses a real CSV parser → **0 rows skipped**, 1,939 drugs. `npm run verify` asserts these.)
 
 **⚠️ Plan corrections (this changes the grounding design):**
 - The public CSVs have **NO mechanism / management text** and **NO RxCUI or DrugBank ID mapping** — only the pair + a severity `Level`. The earlier plan ("~302k interactions, mechanism + management, mapped to DrugBank IDs + ATC") overstated what the download contains.
-- `Drug_A` / `Drug_B` are **generic English names** (e.g. `Warfarin`, `Aspirin`). The join key is the **normalized name**, not an RxCUI.
-- `Level` includes **`Unknown`** (47k pairs) — treat as "documented interaction, severity uncharacterized," distinct from "no interaction found." Do **not** show `Unknown` as a clean bill of health.
+- `Drug_A` / `Drug_B` are **INN/generic names** (e.g. `Warfarin`, `Acetylsalicylic acid`). The join key is the **normalized name**, not an RxCUI. **`Aspirin` is NOT in DDInter** — it must resolve to `Acetylsalicylic acid` via the synonym layer, so `synonyms` is load-bearing even for English. (`Paracetamol`/acetaminophen is absent entirely.)
+- `Level` includes **`Unknown`** (29,813 stored pairs) — treat as "documented interaction, severity uncharacterized," distinct from "no interaction found." Do **not** show `Unknown` as a clean bill of health.
 
 ### RxNorm Current Prescribable Content — **needs auth (user action)**
 - Latest release: `RxNorm_full_prescribe_05042026.zip` (May 4, 2026). Files: RXNCONSO (names/codes), RXNSAT (attributes), RXNREL (relationships).
@@ -45,7 +48,7 @@ CREATE TABLE interactions (
 );
 CREATE UNIQUE INDEX idx_pair ON interactions(drug_a, drug_b);
 
--- 2,496 rows. The known-drug vocabulary: shelf autocomplete + "is this drug in scope?" gate.
+-- 1,939 rows. The known-drug vocabulary: shelf autocomplete + "is this drug in scope?" gate.
 CREATE TABLE drugs (
   name        TEXT NOT NULL,           -- display name, e.g. 'Warfarin'
   normalized  TEXT NOT NULL,           -- lowercase, trimmed
