@@ -1,0 +1,21 @@
+name: verify
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - run: npm ci
+      - name: Type-check core + scripts
+        run: npm run typecheck
+      - name: Fetch DDInter + build pharos.db
+        run: npm run data
+      - name: Verify grounded chain (8/8)
+        run: npm run verify
