@@ -48,7 +48,11 @@ function lookup(x: string, y: string) {
 
 // 1) OCR the label
 const t0 = Date.now();
-const ocrModel = await loadModel({ modelSrc: OCR_MODEL, modelType: "ocr" });
+// modelType "onnx-ocr" — runtime warned that the "ocr" alias is deprecated (verified 2026-05-31).
+const ocrModel = await loadModel({
+  modelSrc: OCR_MODEL,
+  modelType: "onnx-ocr",
+});
 const ocrRes = ocr({
   modelId: ocrModel,
   image: imagePath,

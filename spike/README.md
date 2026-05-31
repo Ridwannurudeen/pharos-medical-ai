@@ -36,5 +36,8 @@ MEDPSY_1_7B=/path node spike/gate-b-grounded.ts <label-photo.jpg>
 Runs OCR → normalize + **real DDInter lookup (`data/pharos.db`)** → MedPsy explains the retrieved fact.
 **PASS:** a textbook pair (aspirin label + `Warfarin` shelf → **Major**, cited) returns a correct severity-graded warning; an out-of-dataset drug hits the **ABSTAIN** path; network stays offline. (The lookup half is already verified by `npm run verify`.)
 
+## Runtime note (verified 2026-05-31)
+`@qvac/sdk` v0.11.0 **installs and imports cleanly in Node** (194 pkgs; `loadModel`/`ocr`/`completion`/`startQVACProvider` are real; `OCR_LATIN_RECOGNIZER_1` is an object), and the MedPsy GGUF downloads + validates. BUT on a sandboxed **Windows dev box the inference worker would not start** — `loadModel()` fails with `RPC_INIT_TIMEOUT` (code 50204, 30s, not configurable). So **run the spike on the real target (mobile dev build / a normal laptop), not in a restricted CI/sandbox.** The grounding half (OCR→normalize→DDInter→explain *minus* the two model calls) is already proven by `npm run verify` (30/30).
+
 ## The verdict
 One line in the team channel: **A: pass/fail · B: pass/fail → decision.** That unblocks the whole build.
