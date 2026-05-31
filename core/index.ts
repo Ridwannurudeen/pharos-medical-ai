@@ -4,27 +4,30 @@
 // end-to-end before the real QVAC-backed engine lands. Real implementations land behind these
 // EXACT signatures (OCR -> normalize -> DDInter lookup -> MedPsy explain). Do not change a
 // signature without announcing it (see docs/lane-app.md).
-import type {
-  ScanResult,
-  Interaction,
-  ShelfItem,
-  AuditEvent,
-} from "./types.ts";
+import type { ScanResult, Interaction, ShelfItem } from "./types.ts";
+import { createAuditLog, memorySink } from "./audit.ts";
 
 export * from "./types.ts";
+export * from "./grounding.ts";
+export * from "./audit.ts";
 export { norm } from "./text.ts";
 
 const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;
 
-// ---- audit (mock): collect events in memory; the real impl appends to audit.jsonl (docs/audit-log-schema.md) ----
-const _events: AuditEvent[] = [];
-export const audit = {
-  log(e: AuditEvent): void {
-    _events.push(e);
+// ---- audit: the REAL writer (core/audit.ts) with an in-memory sink for the mock engine.
+// The app/anchor swap in a file sink (fs / expo-file-system) at wiring time. ----
+const _mem = memorySink();
+const _t0 = Date.now();
+export const audit = createAuditLog({
+  deviceId: "mock",
+  sink: _mem.sink,
+  clock: {
+    isoNow: () => new Date().toISOString(),
+    monotonicMs: () => Date.now() - _t0,
   },
-  /** test/inspection only */
-  _events,
-};
+});
+/** test/inspection only: the raw JSONL lines written so far */
+export const auditLines = _mem.lines;
 
 // ---- canned fixtures so every screen has data: result card, no-interaction, abstain, delegated ----
 const WARFARIN_ASA: Interaction = {
@@ -98,7 +101,7 @@ export const mockScenarios: Record<
 
 /** Load OCR + LLM engines (local or, in mesh mode, delegated). Mock: instant. */
 export async function loadEngines(): Promise<{ ready: true }> {
-  audit.log({ event: "model_load", mock: true });
+  audit.log("model_load", { mock: true });
   return { ready: true };
 }
 
@@ -148,8 +151,7 @@ export async function scanPipeline(
   _shelf: ShelfItem[] = [],
 ): Promise<ScanResult> {
   const result = clone(mockScenarios[_scenario]);
-  audit.log({
-    event: "scan_result",
+  audit.log("scan_result", {
     mock: true,
     severity: result.interactions[0]?.severity ?? "none",
     abstained: result.abstained,

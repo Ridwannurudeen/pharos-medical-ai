@@ -1,41 +1,23 @@
-// Reproducibility check for data/pharos.db. Run: npm run verify
-// Asserts the grounded chain returns the right severity for known fixtures and abstains on unknowns.
-// Exits non-zero on any failure (CI-friendly).
+// Reproducibility + unit check. Run: npm run verify
+// Exercises the REAL core modules (grounding + audit) against data/pharos.db, asserts known
+// fixtures, and checks the abstain path. Exits non-zero on any failure (CI-friendly).
 import { DatabaseSync } from "node:sqlite";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
+import { createGrounding, type QueryRunner } from "../core/grounding.ts";
+import { createAuditLog, memorySink } from "../core/audit.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
-const DB_PATH = join(ROOT, "data", "pharos.db");
-const norm = (s: string): string => s.trim().toLowerCase().replace(/\s+/g, " ");
+const db = new DatabaseSync(join(ROOT, "data", "pharos.db"), {
+  readOnly: true,
+});
 
-const db = new DatabaseSync(DB_PATH, { readOnly: true });
-
-// resolve a free-text drug name to a canonical normalized name (synonym layer, then the drug list); null = not in scope.
-function resolve(name: string): string | null {
-  const n = norm(name);
-  const drug = db
-    .prepare("SELECT normalized FROM drugs WHERE normalized = ?")
-    .get(n) as { normalized: string } | undefined;
-  if (drug) return drug.normalized;
-  const syn = db
-    .prepare("SELECT normalized FROM synonyms WHERE synonym = ?")
-    .get(n) as { normalized: string } | undefined;
-  return syn ? syn.normalized : null;
-}
-
-function lookup(drugX: string, drugY: string): string | null {
-  const a0 = resolve(drugX),
-    b0 = resolve(drugY);
-  if (!a0 || !b0) return null; // abstain — at least one drug not in scope
-  const [a, b] = a0 < b0 ? [a0, b0] : [b0, a0];
-  const row = db
-    .prepare(
-      "SELECT severity FROM interactions WHERE drug_a = ? AND drug_b = ?",
-    )
-    .get(a, b) as { severity: string } | undefined;
-  return row ? row.severity : "NONE"; // NONE = both known, no documented interaction
-}
+// node:sqlite adapter for the platform-agnostic QueryRunner the core expects.
+// Cast at the driver boundary: our params are always SQLite scalars.
+type SqlParam = string | number | bigint | null | Uint8Array;
+const query: QueryRunner = (sql, params) =>
+  db.prepare(sql).all(...(params as SqlParam[])) as Record<string, unknown>[];
+const g = createGrounding(query);
 
 let failures = 0;
 function check(label: string, actual: unknown, expected: unknown): void {
@@ -46,7 +28,14 @@ function check(label: string, actual: unknown, expected: unknown): void {
   );
 }
 
-console.log("Pharos data verify ─ pharos.db");
+// severity of the scanned drug vs one shelf drug: severity | "NONE" (both known, no interaction) | null (abstain)
+function sev(scanned: string, shelfName: string): string | null {
+  const ix = g.lookupInteractions(scanned, [{ name: shelfName }]);
+  if (ix.length) return ix[0].severity;
+  return g.resolve(scanned) && g.resolve(shelfName) ? "NONE" : null;
+}
+
+console.log("Pharos verify ─ grounding + audit against pharos.db");
 
 const pairCount = (
   db.prepare("SELECT COUNT(*) c FROM interactions").get() as { c: number }
@@ -69,36 +58,67 @@ check(
 // grounded-chain fixtures (verified against the real CSVs 2026-05-31)
 check(
   "Warfarin + Acetylsalicylic acid = Major",
-  lookup("Warfarin", "Acetylsalicylic acid"),
+  sev("Warfarin", "Acetylsalicylic acid"),
   "Major",
 );
 check(
   "Aspirin (synonym) + Warfarin = Major",
-  lookup("Aspirin", "Warfarin"),
+  sev("Aspirin", "Warfarin"),
   "Major",
 );
 check(
-  "Coumadin (synonym) + Aspirin (synonym) = Major",
-  lookup("Coumadin", "aspirin"),
+  "Coumadin (synonym) + aspirin (synonym) = Major",
+  sev("Coumadin", "aspirin"),
   "Major",
 );
 check(
   "order-independent: Acetylsalicylic acid + Warfarin = Major",
-  lookup("Acetylsalicylic acid", "Warfarin"),
+  sev("Acetylsalicylic acid", "Warfarin"),
   "Major",
 );
 
-// abstain path: an unknown drug must resolve to null (never guessed)
+// citation provenance is populated
+const asaIx = g.lookupInteractions("Aspirin", [{ name: "Warfarin" }])[0];
+check("interaction carries DDInter source", asaIx?.source, "DDInter 2.0");
+check("interaction carries a ddinter id", typeof asaIx?.ddinterIdA, "string");
+
+// abstain path: an unknown drug resolves to null and yields no interactions (never guessed)
 check(
   "unknown drug resolves to null (abstain)",
-  resolve("definitely-not-a-real-drug-xyz"),
+  g.resolve("definitely-not-a-real-drug-xyz"),
   null,
 );
 check(
-  "lookup with an unknown drug abstains",
-  lookup("definitely-not-a-real-drug-xyz", "Warfarin"),
-  null,
+  "lookup with an unknown drug yields no interactions",
+  g.lookupInteractions("definitely-not-a-real-drug-xyz", [{ name: "Warfarin" }])
+    .length,
+  0,
 );
+
+// audit-log writer round-trip (fixed clock + in-memory sink)
+const { sink, lines } = memorySink();
+const audit = createAuditLog({
+  deviceId: "test-1",
+  sink,
+  clock: { isoNow: () => "2026-06-01T00:00:00.000Z", monotonicMs: () => 42 },
+});
+audit.log("ddinter_lookup", {
+  drug_a: "warfarin",
+  drug_b: "acetylsalicylic acid",
+  severity: "Major",
+  ddinter_id_a: "DDInter1951",
+  ddinter_id_b: "DDInter20",
+});
+const rec = JSON.parse(lines[0]) as Record<string, unknown>;
+check("audit writes exactly one line", lines.length, 1);
+check("audit record event", rec.event, "ddinter_lookup");
+check("audit record device_id", rec.device_id, "test-1");
+check(
+  "audit record network_state defaults offline",
+  rec.network_state,
+  "offline",
+);
+check("audit record carries custom fields", rec.severity, "Major");
 
 db.close();
 console.log(
