@@ -32,6 +32,8 @@ audit.log(event): void                                     // append to audit.js
 ```
 B renders `ScanResult` and calls `scanPipeline(image)`; B owns the user's shelf store (`expo-sqlite`), Lead owns the read-only bundled `pharos.db`.
 
+> **Hand this to teammate B:** [`docs/lane-app.md`](docs/lane-app.md) — a self-contained brief of their entire scope (contract, screens, per-phase deliverables, rules of the road).
+
 ---
 
 ## Gate 0 — Day-1 Spike (June 1, before anything else)
