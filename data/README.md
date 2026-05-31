@@ -7,14 +7,14 @@ All interaction warnings are **retrieved** from these datasets and merely *expla
 Large raw files live under `data/raw/` and are git-ignored. Commit only the processed, app-ready artifact (a compact SQLite DB or JSON) and the build script that produces it.
 
 ## 1. DDInter 2.0 — interactions + severity
-- **What:** ~302k drug-drug interactions, severity (Major/Moderate/Minor), mechanism + management text, mapped to DrugBank IDs + ATC codes.
+- **What:** drug-drug interactions with a severity `Level`. **Verified 2026-05-31:** the public CSVs are **name + severity only** — 160,235 distinct pairs across 2,496 generic drugs, `Level` ∈ Major/Moderate/Minor/**Unknown**; **no** mechanism/management text and **no** RxCUI/DrugBank mapping (the earlier description overstated this). Full grounding design: [`../docs/data-pipeline.md`](../docs/data-pipeline.md).
 - **License:** CC BY-NC 4.0 (non-commercial, attribution). See `NOTICE`.
 - **Get it:** download the CSVs from https://ddinter2.scbdd.com (no login).
 - **Use:** the core interaction table.
 
 ## 2. RxNorm — Current Prescribable Content
 - **What:** offline mapping from drug names/brands/synonyms → RxCUI canonical id.
-- **License:** public subset, no UMLS login required.
+- **License:** public domain (US Gov work). **Note (verified 2026-05-31):** the download now **redirects to UTS login — a free UMLS/UTS account + API key is required** (the old "no login" note was outdated). Not on the critical path: DDInter matches on generic names, so the solo MVP works without RxNorm; it only widens brand/foreign-name coverage.
 - **Get it:** https://www.nlm.nih.gov/research/umls/rxnorm/docs/prescribe.html
 - **Use:** normalize OCR'd text to a canonical drug for lookup.
 
