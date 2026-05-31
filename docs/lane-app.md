@@ -67,11 +67,12 @@ type Interaction = {
 };
 // NOTE: DDInter has NO mechanism/management text. The human-readable context is `explanation` (from MedPsy), not a dataset field.
 ```
+- **Importing core (Metro) — confirmed swap:** `import { scanPipeline, mockScenarios, __setMockScenario, audit } from "../core"` resolves to the **compiled** `core/dist/index.js` (plain ESM, `.js` specifiers, zero Node/SDK deps) via `core/package.json` `main` — Metro-safe (verified: CommonJS `main` resolution, which Metro uses, → `core/dist/index.js`). Run `npm install` (or `npm run build:core`) **at the repo root** once to generate `core/dist` (gitignored; auto-built on install via `prepare`). **Only import from `../core`** — never `../core/adapters-node` or `../core/engine-qvac` (those are Node/anchor-only, real `node:`/`@qvac` imports, and will break the bundle). If your Metro doesn't honour `main`, use the explicit `"../core/dist"`.
 - **Build every screen NOW:** the mock exposes `mockScenarios` (`major` / `none` / `abstain` / `delegated`) and `__setMockScenario(name)` to flip what `scanPipeline` returns — wire all four states before the real engine exists.
 - **Streaming the explanation:** the real `scanPipeline` will also expose a token stream for the MedPsy text (typewriter render). Exact handle TBD when the real `core/` lands; build against the string first, wire streaming second.
-- **Audit:** call `audit.log({ event: "scan_result", ... })`-style events at the UI boundary only if asked — the Lead's `core/` already logs the pipeline. Don't double-log.
+- **Audit:** the signature is `audit.log(event, fields?)` (e.g. `audit.log("scan_result", { ... })`) — call only at the UI boundary if asked; the Lead's `core/` already logs the pipeline. Don't double-log.
 
-You own the **user's medication shelf** storage yourself (`expo-sqlite`) — add/remove meds; pass the shelf into the scan. The Lead owns the read-only bundled interaction DB; you never read it directly.
+You own the **user's medication shelf** storage yourself — **`expo-secure-store`** (OS-keystore encryption at rest; approved over `expo-sqlite` for this short list). Caveat: ~2 KB/value limit on Android — fine for a short shelf as a JSON blob; move to SQLite/SQLCipher if it goes relational. Add/remove meds; pass the shelf into the scan. The Lead owns the read-only bundled interaction DB; you never read it directly.
 
 ## Screens to build
 
@@ -83,7 +84,7 @@ You own the **user's medication shelf** storage yourself (`expo-sqlite`) — add
    - **Delegated badge** when `delegated === true` ("analyzed by a larger model nearby").
    - The persistent **educational-only disclaimer**.
 3. **Abstain card** — when `abstained === true`: *"I can't verify this one — consult a pharmacist."* Never show a fabricated result. This path is a feature, demo it.
-4. **Shelf** — list + add/remove meds (encrypted `expo-sqlite`); this is the set every scan is checked against.
+4. **Shelf** — list + add/remove meds (encrypted via `expo-secure-store`); this is the set every scan is checked against.
 5. **Settings / About** — disclaimer, data sources + licenses (DDInter CC BY-NC), offline indicator.
 6. **Mesh status indicator** (Phase 2) — a small chip: `on-device` / `delegating to anchor` / `fell back to on-device`. Driven entirely by `ScanResult.delegated` + a `core/` status hook the Lead exposes.
 
@@ -103,4 +104,4 @@ You own the **user's medication shelf** storage yourself (`expo-sqlite`) — add
 - **Daily:** one-line status in the team channel (shipped / blocked).
 
 ## Stack (planned — confirm with Lead before adding native modules)
-Expo (bare workflow if a native module needs it) · `expo-camera` / `react-native-vision-camera` · `expo-sqlite` · `expo-network` (to show/prove offline). All inference is via `core/` → `@qvac/sdk`; you never add a model or an API client.
+Expo (bare workflow if a native module needs it) · `expo-camera` / `react-native-vision-camera` · `expo-secure-store` (encrypted shelf) · `expo-network` (to show/prove offline). All inference is via `core/` → `@qvac/sdk`; you never add a model or an API client.

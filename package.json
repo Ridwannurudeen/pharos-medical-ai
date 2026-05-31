@@ -13,7 +13,9 @@
     "build-data": "node scripts/build-data.ts",
     "data": "npm run fetch-data && npm run build-data",
     "verify": "node scripts/verify-data.ts",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "build:core": "tsc -p tsconfig.build.json",
+    "prepare": "npm run build:core"
   },
   "devDependencies": {
     "@types/node": "^22.19.19",

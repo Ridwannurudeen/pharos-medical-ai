@@ -1,0 +1,13 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rootDir": "core",
+    "outDir": "core/dist",
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["core/index.ts"],
+  "exclude": ["core/adapters-node.ts", "core/engine-qvac.ts", "scripts"]
+}
