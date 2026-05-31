@@ -6,7 +6,15 @@ The go/no-go gate that decides **solo-only vs the unified mesh product**. Full r
 
 ## Prerequisites
 1. `npm install @qvac/sdk` (laptop + phone dev build).
-2. Download MedPsy GGUFs (1.7B phone / 4B laptop). Set their handles in `spike/config.ts` or via env (`MEDPSY_4B`, `MEDPSY_1_7B`).
+2. Download the MedPsy GGUFs (recommended quant **Q4_K_M**, verified filenames):
+   ```bash
+   pip install -U "huggingface_hub[cli]"
+   huggingface-cli download qvac/MedPsy-1.7B-GGUF medpsy-1.7b-q4_k_m-imat.gguf --local-dir ./models  # ~1.28 GB (phone)
+   huggingface-cli download qvac/MedPsy-4B-GGUF   medpsy-4b-q4_k_m-imat.gguf   --local-dir ./models  # ~2.72 GB (anchor)
+   export MEDPSY_1_7B="$PWD/models/medpsy-1.7b-q4_k_m-imat.gguf"
+   export MEDPSY_4B="$PWD/models/medpsy-4b-q4_k_m-imat.gguf"
+   ```
+   (Or hardcode the paths in `spike/config.ts`. OCR uses the SDK's built-in `OCR_LATIN_RECOGNIZER_1` — no download.)
 3. `npm run data` once so `data/pharos.db` exists (Gate B reads it).
 4. A LAN/hotspot with **WAN disabled** for the offline runs.
 

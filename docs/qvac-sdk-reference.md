@@ -22,7 +22,7 @@ npm install @qvac/sdk
 import { loadModel, completion, unloadModel, LLAMA_3_2_1B_INST_Q4_0 } from "@qvac/sdk";
 ```
 
-✅ The SDK exposes **constants for preconfigured models** (e.g. `LLAMA_3_2_1B_INST_Q4_0`) that resolve through the distributed registry. ❓ **The exact MedPsy-1.7B / MedPsy-4B constant names (or `pear://` keys) are NOT yet confirmed** — check the model registry / HF card during the spike.
+✅ The SDK exposes **constants for preconfigured models** (e.g. `LLAMA_3_2_1B_INST_Q4_0`, `OCR_LATIN_RECOGNIZER_1`) — verified to be descriptor **objects**, so **import them, don't pass the string name**. ✅ **MedPsy (verified 2026-05-31 vs HF):** there is **no** SDK constant — download the GGUF from `qvac/MedPsy-1.7B-GGUF` / `qvac/MedPsy-4B-GGUF` (recommended **Q4_K_M**: `medpsy-1.7b-q4_k_m-imat.gguf` ≈1.28 GB phone, `medpsy-4b-q4_k_m-imat.gguf` ≈2.72 GB anchor) and pass the **local path** as `modelSrc` (keeps Gate B offline).
 
 ## Load a model — `loadModel` ✅
 
@@ -52,7 +52,7 @@ for await (const token of result.tokenStream) {
 - `history: Array<{ role: string; content: string }>`
 - `stream: boolean` (default true), `captureThinking?: boolean`, `tools?: [...]`
 - **Consume via `result.tokenStream`** (async iterable) — confirmed in the quickstart.
-- ⚠️ The API-reference page also mentions `result.events` / `result.final` (aggregated content + stats). `tokenStream` is the documented happy path; treat `.final` as **unconfirmed** until we see it in an example. For audit-log TTFT/TPS we likely need the stats object — **resolve during the spike.**
+- ✅ Package-verified (v0.11.0 tarball): `completion()` returns `{ tokenStream, text, toolCallStream, ... }` — use `tokenStream` (stream) or `text` (whole string). (The API-reference page's `.events`/`.final` weren't the tarball's happy path; prefer `tokenStream`/`text`.)
 
 ## OCR — `ocr` ✅
 
