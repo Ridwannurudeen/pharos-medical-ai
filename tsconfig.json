@@ -13,5 +13,5 @@
   },
   "include": ["core", "scripts"],
   "_comment": "engine-qvac.ts is excluded from CI typecheck — it imports @qvac/sdk (a heavy native runtime dep not installed in CI). It IS type-verified locally against the installed SDK v0.11.0.",
-  "exclude": ["core/engine-qvac.ts"]
+  "exclude": ["core/engine-qvac.ts", "core/dist"]
 }
