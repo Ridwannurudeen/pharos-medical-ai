@@ -39,32 +39,36 @@ The MedPsy models, the DDInter/RxNorm/DrugBank datasets, and the QVAC SDK setup 
 
 ## The contract you code against (`core/`)
 
-The Lead ships this as **mocks on Day 2** (real signatures, canned fixtures) so you can build the whole app immediately, then swaps in real implementations behind the **same signatures**. Treat it as a stable interface.
+The Lead ships this as **mocks (already in `core/`)** — real signatures, canned fixtures — so you can build the whole app immediately; real implementations land behind the **same signatures**. Treat it as a stable interface. (Types live in `core/types.ts`.)
 
 ```ts
-import { scanPipeline, audit } from "../core";
+import { scanPipeline, mockScenarios, __setMockScenario, audit } from "../core";
 
-// You mostly call ONE function and render its result:
-scanPipeline(image): Promise<ScanResult>
+// One call per scan: image + the user's shelf -> grounded, explained result.
+scanPipeline(image: string | Uint8Array, shelf: ShelfItem[]): Promise<ScanResult>
+
+type Severity = "Major" | "Moderate" | "Minor" | "Unknown"; // DDInter includes "Unknown" = documented but uncharacterized (NOT safe)
 
 type ScanResult = {
-  scan:        { rawText: string; generic: string | null; rxcui: string | null; matched: boolean };
-  interactions: Interaction[];          // [] when none found
-  explanation: string;                  // MedPsy plain-language text (also streamable — see below)
+  scan:        { rawText: string; generic: string | null; matched: boolean };
+  interactions: Interaction[];          // [] = none found (NOT a safety guarantee)
+  explanation: string;                  // MedPsy plain-language context (also streamable — see below)
   abstained:   boolean;                 // true → show the abstain card, NOT a result
   abstainReason?: "unresolved_drug" | "not_in_dataset";
-  delegated:   boolean;                 // true → answer came from the mesh anchor (show the badge)
-  source:      "DDInter";               // citation to show on every interaction
+  delegated:   boolean;                 // true → answered by the mesh anchor (show the badge)
   latencyMs:   number;
 };
 
 type Interaction = {
   drugA: string; drugB: string;
-  severity: "Major" | "Moderate" | "Minor";
-  mechanism: string; management: string; sourceRowId: string;
+  severity: Severity;
+  source: "DDInter 2.0";                // citation to show on every interaction
+  ddinterIdA: string; ddinterIdB: string;
 };
+// NOTE: DDInter has NO mechanism/management text. The human-readable context is `explanation` (from MedPsy), not a dataset field.
 ```
-- **Streaming the explanation:** `scanPipeline` also exposes a token stream for the MedPsy text so you can render it live (typewriter). The Lead will confirm the exact streaming handle when the real `core/` lands; build against the string first, wire streaming second.
+- **Build every screen NOW:** the mock exposes `mockScenarios` (`major` / `none` / `abstain` / `delegated`) and `__setMockScenario(name)` to flip what `scanPipeline` returns — wire all four states before the real engine exists.
+- **Streaming the explanation:** the real `scanPipeline` will also expose a token stream for the MedPsy text (typewriter render). Exact handle TBD when the real `core/` lands; build against the string first, wire streaming second.
 - **Audit:** call `audit.log({ event: "scan_result", ... })`-style events at the UI boundary only if asked — the Lead's `core/` already logs the pipeline. Don't double-log.
 
 You own the **user's medication shelf** storage yourself (`expo-sqlite`) — add/remove meds; pass the shelf into the scan. The Lead owns the read-only bundled interaction DB; you never read it directly.

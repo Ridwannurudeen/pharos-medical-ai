@@ -18,19 +18,21 @@
 | **Verification** | **Lead** | `npm run verify` harness, reproducibility, network-capture evidence, demo fixtures. |
 | **`app/`** — the phone app | **App Dev (B)** | Expo app: camera capture, OCR wiring, **result card UI** (severity-graded, cited), encrypted **medication shelf** (add/remove), disclaimer + abstain UX, navigation, settings, mesh status indicator. |
 
-**The contract seam (the most important thing in this doc).** Lane B never touches the QVAC SDK or the datasets directly — B builds the UI against a typed `core/` API. On **Day 2 the Lead ships `core/` as mocks** (canned fixtures, real signatures) so B can build the *entire* app immediately; the Lead then swaps real implementations in behind the same signatures. Integration is continuous, not a big-bang merge.
+**The contract seam (the most important thing in this doc).** Lane B never touches the QVAC SDK or the datasets directly — B builds the UI against a typed `core/` API. The Lead has shipped **`core/` as mocks** (canned fixtures, real signatures — in `core/`, types in `core/types.ts`) so B can build the *entire* app immediately; the Lead swaps real implementations in behind the same signatures. Integration is continuous, not a big-bang merge.
 
 ```ts
-// core/index.ts — the contract both lanes agree on (Lead implements; B consumes)
-loadEngines(opts): Promise<Engines>                       // load OCR + LLM (local or delegated)
-ocrLabel(image): Promise<{ text; blocks; latencyMs }>      // QVAC ocr()
-normalize(text): Promise<{ raw; generic; rxcui; matched }> // RxNorm/DrugBank match, or abstain
-lookupInteractions(rxcui, shelf): Promise<Interaction[]>   // DDInter; {severity,mechanism,management,sourceRowId}
-explain({ scan, shelf, interactions }): { tokenStream }    // MedPsy explains the retrieved fact (streamed)
-scanPipeline(image): Promise<ScanResult>                   // orchestrates all of the above + emits audit events
+// core/ — the contract both lanes agree on (Lead implements; B consumes). Types in core/types.ts.
+scanPipeline(image, shelf): Promise<ScanResult>            // the one call B makes per scan; emits audit events
+// ScanResult  = { scan{rawText,generic,matched}, interactions[], explanation, abstained, abstainReason?, delegated, latencyMs }
+// Interaction = { drugA, drugB, severity: Major|Moderate|Minor|Unknown, source:"DDInter 2.0", ddinterIdA, ddinterIdB }
+loadEngines(): Promise<...>                                // load OCR + LLM (local or delegated)
+ocrLabel(image): Promise<{ text; latencyMs }>             // QVAC ocr()
+normalize(text): Promise<{ raw; generic; matched }>        // synonym + DDInter drug-list match, or abstain
+lookupInteractions(drug, shelf): Promise<Interaction[]>    // DDInter lookup by normalized name
+explain({ scan, shelf, interactions }): Promise<{ text }>  // MedPsy explains the retrieved fact
 audit.log(event): void                                     // append to audit.jsonl per docs/audit-log-schema.md
 ```
-B renders `ScanResult` and calls `scanPipeline(image)`; B owns the user's shelf store (`expo-sqlite`), Lead owns the read-only bundled `pharos.db`.
+B renders `ScanResult` and calls `scanPipeline(image, shelf)`; B owns the user's shelf store (`expo-sqlite`), Lead owns the read-only bundled `pharos.db`. (DDInter has no mechanism text — see [`docs/data-pipeline.md`](docs/data-pipeline.md).)
 
 > **Hand this to teammate B:** [`docs/lane-app.md`](docs/lane-app.md) — a self-contained brief of their entire scope (contract, screens, per-phase deliverables, rules of the road).
 

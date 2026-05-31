@@ -1,0 +1,17 @@
+{
+  "name": "pharos-core",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Pharos — core engine, grounding data pipeline, and verification (Lead lane)",
+  "license": "Apache-2.0",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "fetch-data": "node scripts/fetch-data.ts",
+    "build-data": "node scripts/build-data.ts",
+    "data": "npm run fetch-data && npm run build-data",
+    "verify": "node scripts/verify-data.ts"
+  }
+}
