@@ -1,0 +1,31 @@
+# dependencies
+node_modules/
+.expo/
+.expo-shared/
+
+# native builds
+android/
+ios/
+*.apk
+*.ipa
+build/
+dist/
+
+# models (too large to commit — fetched per data/README)
+*.gguf
+models/
+
+# raw datasets (commit only the processed artifact, not the source dumps)
+data/raw/
+
+# local env & secrets
+.env
+.env.*
+
+# logs & captures from local runs (keep curated evidence elsewhere)
+*.log
+*.pcap
+
+# OS
+.DS_Store
+Thumbs.db

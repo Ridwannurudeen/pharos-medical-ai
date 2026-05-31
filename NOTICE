@@ -1,0 +1,38 @@
+Pharos
+Copyright (c) 2026 The Pharos Team
+
+This product's source code is licensed under the Apache License, Version 2.0.
+
+------------------------------------------------------------------------------
+THIRD-PARTY DATA AND MODELS (each retains its own license)
+------------------------------------------------------------------------------
+
+DDInter 2.0 — drug-drug interaction data (interactions + severity)
+  License: CC BY-NC 4.0 (Attribution-NonCommercial). NON-COMMERCIAL use only.
+  Attribution required. Bundling permitted for this non-commercial project.
+  Source: https://ddinter2.scbdd.com  (NAR 2025: doi via academic.oup.com/nar)
+
+RxNorm — Current Prescribable Content (drug name normalization → RxCUI)
+  Source: U.S. National Library of Medicine (NLM). RxNorm codes/normalized
+  names are U.S. Government work (public domain); the Current Prescribable
+  Content subset is downloadable without a UMLS license.
+  https://www.nlm.nih.gov/research/umls/rxnorm/docs/prescribe.html
+  NOTE: NLM's RxNav drug-interaction API was discontinued Jan 2, 2024 — NOT used.
+
+DrugBank Vocabulary (CC0 subset only — brand/international synonyms)
+  License: CC0 1.0 (public domain). Only the CC0 Vocabulary/Structures subset
+  is used; the CC BY-NC interaction XML is NOT used.
+  https://go.drugbank.com/releases/latest#open-data
+
+QVAC MedPsy models (MedPsy-1.7B / MedPsy-4B)
+  Source: Tether / QVAC. CONFIRM the exact model license on the Hugging Face
+  model card before redistribution: https://huggingface.co/qvac
+
+QVAC SDK (@qvac/sdk)
+  Source: Tether. CONFIRM license terms in the SDK repository / package.
+  https://github.com/tetherto/qvac
+
+------------------------------------------------------------------------------
+Because DDInter is CC BY-NC, this project as distributed is NON-COMMERCIAL.
+Commercial reuse would require replacing DDInter (e.g., with openFDA CC0 data)
+or obtaining appropriate licenses.
