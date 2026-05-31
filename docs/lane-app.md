@@ -6,6 +6,37 @@ You own **`app/`**: the entire Expo phone app for Pharos. You do **not** touch t
 >
 > ⚕️ **Non-negotiable framing:** educational information only, **not** medical advice. The disclaimer is always visible. The app **identifies → explains → surfaces documented interactions → tells the user to see a professional.** It never diagnoses, doses, or says "start/stop taking."
 
+## Getting access & setting up your machine (do this first)
+
+### 1. Repo access (it's a private repo)
+1. Send the Lead your **GitHub username** — you'll be added as a collaborator and get an email invite. **Accept it.**
+2. Clone:
+   ```bash
+   git clone https://github.com/Ridwannurudeen/pharos-medical-ai.git
+   cd pharos-medical-ai
+   ```
+3. **Workflow — feature branches + PRs** (team convention; don't push straight to `main`):
+   ```bash
+   git checkout -b app/<short-description>
+   # ...make changes, commit...
+   git push -u origin app/<short-description>
+   gh pr create --base main
+   ```
+
+### 2. Install before June 1
+- **Git** and **Node.js LTS** — the Lead's machine runs Node **v24.15.0 / npm 11.12.1**; match the major version to avoid surprises.
+- The **Expo toolchain** (used from build start: `npx create-expo-app`, `npx expo`).
+- A **physical Android phone** for testing (demo target: **Galaxy S25 Ultra**), USB debugging on. Note: the QVAC SDK needs a **dev build**, **not** Expo Go.
+- A code editor (VS Code recommended) + the GitHub CLI (`gh`) for PRs.
+
+### 3. What you do NOT download
+The MedPsy models, the DDInter/RxNorm/DrugBank datasets, and the QVAC SDK setup are the **Lead's** lane. You build entirely against `core/` — don't pull models or data onto your machine.
+
+### 4. First 30 minutes
+- Accept the invite, clone, then confirm your toolchain: `node -v`, `git --version`, `gh auth status`.
+- Read this brief end-to-end.
+- Skim [`../ROADMAP.md`](../ROADMAP.md) (timeline + checkpoints) and [`qvac-sdk-reference.md`](qvac-sdk-reference.md) (what the SDK can/can't do — note: there is **no** auto peer-failover; resilience is `fallbackToLocal`).
+
 ## The contract you code against (`core/`)
 
 The Lead ships this as **mocks on Day 2** (real signatures, canned fixtures) so you can build the whole app immediately, then swaps in real implementations behind the **same signatures**. Treat it as a stable interface.
