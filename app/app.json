@@ -1,0 +1,31 @@
+{
+  "expo": {
+    "name": "Pharos",
+    "slug": "pharos",
+    "scheme": "pharos",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": false,
+    "splash": { "backgroundColor": "#0B1411", "resizeMode": "contain" },
+    "assetBundlePatterns": ["**/*"],
+    "android": {
+      "package": "com.pharos.app",
+      "permissions": ["CAMERA"]
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.pharos.app"
+    },
+    "plugins": [
+      "expo-dev-client",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Pharos uses the camera only to read a medication label on-device. No photo ever leaves your phone."
+        }
+      ],
+      "expo-secure-store"
+    ]
+  }
+}
