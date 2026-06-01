@@ -11,6 +11,7 @@ export function ShelfScreen() {
   const items = useShelf((s) => s.items);
   const add = useShelf((s) => s.add);
   const remove = useShelf((s) => s.remove);
+  const error = useShelf((s) => s.error);
   const [draft, setDraft] = useState("");
 
   const submit = () => {
@@ -43,6 +44,8 @@ export function ShelfScreen() {
           <Ionicons name="add" size={24} color="#fff" />
         </Pressable>
       </View>
+
+      {error ? <Text style={styles.error}>{error}</Text> : null}
 
       <FlatList
         data={items}
@@ -91,6 +94,12 @@ const styles = StyleSheet.create({
     backgroundColor: colors.accent,
     alignItems: "center",
     justifyContent: "center",
+  },
+  error: {
+    color: colors.danger,
+    fontSize: font.small,
+    paddingHorizontal: spacing.lg,
+    marginBottom: spacing.sm,
   },
   list: { paddingHorizontal: spacing.lg, gap: spacing.sm, paddingBottom: spacing.xxl },
   empty: { color: colors.inkFaint, fontSize: font.body, lineHeight: 22, paddingVertical: spacing.xl, textAlign: "center" },

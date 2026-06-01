@@ -4,12 +4,17 @@ export * from "./contract";
 // ── Engine surface ───────────────────────────────────────────────────────────
 // Default: the self-contained mock (RN-safe, runs on the first `expo run:android`).
 //
-// To use the Lead's REAL engine at repo-root core/ (its mock fixtures + real impls land behind
-// the SAME signatures), change the export below to:  export { ... } from "../../../core";
-// Prereqs are already prepared: metro.config.js watchFolders includes the repo root, and
-// core/index.ts is RN-safe (its import graph has no runtime node:/@qvac deps — verified).
-// The one thing to confirm on-device is Metro resolving core's `.ts`-extension ESM specifiers;
-// if it complains, keep this mock line and ask the Lead for a plain RN entrypoint to core.
+// IMPORT RULE: import the engine ONLY from this barrel (../core in the repo). NEVER import
+// ../core/adapters-node or ../core/engine-qvac. Those two have real node:/@qvac imports and
+// will break the Metro bundle. The ../core barrel re-exports only types/grounding/audit/
+// pipeline/normalize/text, none of which import node:/@qvac, so the barrel is bundle-safe
+// (confirmed with the Lead).
+//
+// To use the Lead's REAL engine, change the export below to `from "../../../core"`. The Lead is
+// delivering a verified Metro-safe entrypoint (extensionless specifiers / compiled .js) so the
+// `.ts`-specifier resolution is a sure thing before the swap; metro.config.js already watches
+// the repo root. Until that entrypoint lands, this faithful mock stays the default (the Lead
+// confirmed that is the right call).
 export {
   scanPipeline,
   mockScenarios,
