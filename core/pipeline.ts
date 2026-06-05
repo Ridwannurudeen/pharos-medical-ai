@@ -6,17 +6,26 @@ import type { ScanResult, ShelfItem, Interaction } from "./types.ts";
 import type { Grounding } from "./grounding.ts";
 import type { AuditLog, Clock } from "./audit.ts";
 
+/** Live-streaming options for the explanation. onToken (if given) fires per streamed token;
+ *  the returned/stored explanation is always the full text, so ScanResult is unchanged. */
+export interface ExplainOptions {
+  onToken?: (token: string) => void;
+}
+
 /** OCR + MedPsy — QVAC-backed in production, fakes in tests. */
 export interface Engine {
   ocr(image: string | Uint8Array): Promise<{ text: string; latencyMs: number }>;
   /** extract the generic/active-ingredient name from OCR text (translation etc.); null = couldn't extract */
   normalize(text: string): Promise<{ generic: string | null }>;
   /** MedPsy explains ONLY the retrieved interactions in plain language */
-  explain(input: {
-    scan: ScanResult["scan"];
-    shelf: ShelfItem[];
-    interactions: Interaction[];
-  }): Promise<{ text: string }>;
+  explain(
+    input: {
+      scan: ScanResult["scan"];
+      shelf: ShelfItem[];
+      interactions: Interaction[];
+    },
+    opts?: ExplainOptions,
+  ): Promise<{ text: string }>;
 }
 
 export interface PipelineDeps {
@@ -32,6 +41,7 @@ export function createScanPipeline(deps: PipelineDeps) {
   return async function scanPipeline(
     image: string | Uint8Array,
     shelf: ShelfItem[] = [],
+    opts?: ExplainOptions,
   ): Promise<ScanResult> {
     const t0 = deps.clock.monotonicMs();
 
@@ -89,11 +99,10 @@ export function createScanPipeline(deps: PipelineDeps) {
     // 5) MedPsy explains the retrieved fact (never invents)
     const delegated = deps.delegated?.() ?? false;
     deps.audit.log("medpsy_start", { delegated });
-    const explanation = await deps.engine.explain({
-      scan,
-      shelf,
-      interactions,
-    });
+    const explanation = await deps.engine.explain(
+      { scan, shelf, interactions },
+      opts,
+    );
     deps.audit.log("medpsy_end", { delegated });
 
     deps.audit.log("scan_result", {
