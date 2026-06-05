@@ -74,7 +74,7 @@ export async function createQvacEngine(
       return normalize(text);
     },
 
-    async explain({ interactions }) {
+    async explain({ interactions }, opts) {
       const facts = interactions.length
         ? interactions
             .map(
@@ -94,7 +94,10 @@ export async function createQvacEngine(
         stream: true,
       });
       let text = "";
-      for await (const token of run.tokenStream) text += token;
+      for await (const token of run.tokenStream) {
+        text += token;
+        opts?.onToken?.(token);
+      }
       return { text: text.trim() };
     },
 

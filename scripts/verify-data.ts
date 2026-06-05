@@ -176,6 +176,55 @@ check(
   true,
 );
 
+// streaming handle: explain emits tokens via onToken; the final explanation still assembles fully
+{
+  const mem = memorySink();
+  const a = createAuditLog({
+    deviceId: "pipe",
+    sink: mem.sink,
+    clock: fakeClock,
+  });
+  const tokens = [
+    "Aspirin ",
+    "with ",
+    "warfarin ",
+    "raises ",
+    "bleeding ",
+    "risk.",
+  ];
+  const sp = createScanPipeline({
+    engine: {
+      ocr: async () => ({ text: "ASPIRIN 81 mg", latencyMs: 5 }),
+      normalize: async () => ({ generic: "Aspirin" }),
+      explain: async (_input, opts) => {
+        let text = "";
+        for (const t of tokens) {
+          text += t;
+          opts?.onToken?.(t);
+        }
+        return { text };
+      },
+    },
+    grounding: g,
+    audit: a,
+    clock: fakeClock,
+  });
+  const received: string[] = [];
+  const r = await sp("img", [{ name: "Warfarin" }], {
+    onToken: (t) => received.push(t),
+  });
+  check(
+    "stream: onToken fired for every token",
+    received.length,
+    tokens.length,
+  );
+  check(
+    "stream: final explanation equals the joined tokens",
+    r.explanation,
+    tokens.join(""),
+  );
+}
+
 // abstain — generic not extracted from OCR text
 const ab1 = await runPipeline(null);
 check(

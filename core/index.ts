@@ -5,6 +5,7 @@
 // EXACT signatures (OCR -> normalize -> DDInter lookup -> MedPsy explain). Do not change a
 // signature without announcing it (see docs/lane-app.md).
 import type { ScanResult, Interaction, ShelfItem } from "./types.ts";
+import type { ExplainOptions } from "./pipeline.ts";
 import { createAuditLog, memorySink } from "./audit.ts";
 
 export * from "./types.ts";
@@ -151,6 +152,7 @@ export function __setMockScenario(name: keyof typeof mockScenarios): void {
 export async function scanPipeline(
   _image: string | Uint8Array,
   _shelf: ShelfItem[] = [],
+  opts?: ExplainOptions,
 ): Promise<ScanResult> {
   const result = clone(mockScenarios[_scenario]);
   audit.log("scan_result", {
@@ -159,5 +161,11 @@ export async function scanPipeline(
     abstained: result.abstained,
     delegated: result.delegated,
   });
+  // mirror the real pipeline's streaming handle so the app can build the typewriter on the mock
+  if (opts?.onToken && result.explanation) {
+    for (const token of result.explanation.match(/\S+\s*/g) ?? []) {
+      opts.onToken(token);
+    }
+  }
   return result;
 }
