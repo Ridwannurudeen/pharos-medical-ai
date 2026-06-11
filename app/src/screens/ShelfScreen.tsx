@@ -13,8 +13,10 @@ export function ShelfScreen() {
   const remove = useShelf((s) => s.remove);
   const error = useShelf((s) => s.error);
   const [draft, setDraft] = useState("");
+  const canSubmit = draft.trim().length > 0;
 
   const submit = () => {
+    if (!canSubmit) return;
     add(draft);
     setDraft("");
   };
@@ -30,6 +32,8 @@ export function ShelfScreen() {
 
       <View style={styles.addRow}>
         <TextInput
+          accessibilityHint="This medication will be checked against future scans."
+          accessibilityLabel="Medication name"
           value={draft}
           onChangeText={setDraft}
           onSubmitEditing={submit}
@@ -40,12 +44,20 @@ export function ShelfScreen() {
           returnKeyType="done"
           style={styles.input}
         />
-        <Pressable onPress={submit} style={styles.addBtn} hitSlop={8}>
+        <Pressable
+          accessibilityLabel="Add medication to shelf"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !canSubmit }}
+          disabled={!canSubmit}
+          onPress={submit}
+          style={[styles.addBtn, !canSubmit && styles.addBtnDisabled]}
+          hitSlop={8}
+        >
           <Ionicons name="add" size={24} color="#fff" />
         </Pressable>
       </View>
 
-      {error ? <Text style={styles.error}>{error}</Text> : null}
+      {error ? <Text accessibilityLiveRegion="polite" style={styles.error}>{error}</Text> : null}
 
       <FlatList
         data={items}
@@ -60,7 +72,12 @@ export function ShelfScreen() {
           <View style={styles.row}>
             <Ionicons name="medkit-outline" size={18} color={colors.inkSoft} />
             <Text style={styles.name}>{item.name}</Text>
-            <Pressable onPress={() => remove(item.name)} hitSlop={10}>
+            <Pressable
+              accessibilityLabel={`Remove ${item.name} from shelf`}
+              accessibilityRole="button"
+              onPress={() => remove(item.name)}
+              hitSlop={10}
+            >
               <Ionicons name="trash-outline" size={18} color={colors.danger} />
             </Pressable>
           </View>
@@ -95,6 +112,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  addBtnDisabled: { opacity: 0.45 },
   error: {
     color: colors.danger,
     fontSize: font.small,
