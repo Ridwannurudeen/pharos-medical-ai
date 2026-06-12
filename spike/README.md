@@ -27,16 +27,16 @@ PROVIDER_KEY=<key> MEDPSY_4B=/path node spike/gate-a-consumer.ts # delegates a c
 ```
 **PASS:** coherent tokens arrive *from the provider* (consumer uses `fallbackToLocal:false`, so a remote failure can't be masked) with WAN off. Log time-to-connect (cold 15-45s, warm sub-second) + TTFT.
 **Not tested here (not an SDK feature):** mid-stream auto peer-failover — see the SDK reference. Resilience = `fallbackToLocal`.
-### Tier 2 — offline model pull (the one true unknown)
-A device with **no model on disk** pulls MedPsy from a peer over Hyperdrive with WAN off, then runs it locally. This is the mesh's actual differentiator (distinct from Tier 1 delegation, which runs inference remotely).
-```bash
-# seed provider (laptop with the 4B):
-MEDPSY_4B=/path node spike/gate-a-pull-provider.ts        # loadModel(seed:true) + prints pull key
-# pull consumer (fresh device, NO model):
-PULL_KEY=<key> PULL_FILE=medpsy-4b-q4_k_m-imat.gguf node spike/gate-a-pull-consumer.ts
-```
-**PASS:** `onProgress` climbs to 100% over the LAN (bytes really transfer) AND a coherent local completion follows, WAN off.
-**Verified vs SDK v0.11.0:** `loadModel` has `seed?:boolean`; `modelSrc` accepts `pear://<key>/<file>` (load-model JSDoc). **Hypothesis under test (NOT in the .d.ts):** that the `startQVACProvider` publicKey is also the Hyperdrive pull key — no "seed → drive key" return exists in the types, so if the pull fails with that key, the share key is surfaced elsewhere (registry: `modelRegistryList/Search/GetModel`) — report it and we adjust the consumer.
+
+> **On mobile, the consumer is the app, not a node script.** `@qvac/sdk` runs on Android via a `react-native-bare-kit` worklet wired by `@qvac/sdk/expo-plugin` (needs `expo prebuild` + a dev client; not Expo Go). The provider/anchor stays a Node process on a **non-Windows** laptop. So Gate A tier-1 = phone app (consumer, `loadModel({delegate})`) ↔ laptop anchor (`gate-a-provider.ts`).
+
+### Tier 2 — offline model pull: NOT SUPPORTED by stock @qvac/sdk (verified 2026-06-12)
+The original plan — a fresh device pulls **our** MedPsy GGUF from a peer over Hyperdrive with WAN off — is **not achievable with the published SDK**, so the `gate-a-pull-*.ts` scripts were removed (they would have thrown). Evidence, all in the installed v0.11.0:
+- `loadModel({ modelSrc: <local path>, seed: true })` throws **`SEEDING_NOT_SUPPORTED`** — *"Seeding is only supported for hyperdrive models"* (`dist/server/rpc/handlers/load-model/resolve.js`: `if (seed && !hyperdriveKey) throw …`). `seed:true` only **re-shares** a model you are *already* pulling from a `pear://` source; it cannot originate a drive from a local file.
+- There is **no SDK or CLI API to publish a local GGUF to a hyperdrive.** SDK surface is read-only registry access (`modelRegistryList/Search/GetModel`); the bundled registry's `registrySource` is only `"hf"` / `"s3"` (HTTP, needs internet), and MedPsy isn't in it. `@qvac/cli@0.6.0` commands are `doctor / bundle sdk / verify / serve openai` — no `seed`/`publish`/`share`.
+- The earlier hypothesis (the `startQVACProvider` publicKey doubles as a Hyperdrive pull key) is also false — that key is the **delegation RPC** key, unrelated to Hyperdrive.
+
+**Net:** the mesh = **tier-1 delegation only** (above), which is real and demoable. Offline peer model-pull is out unless Tether ships a publish/seed API.
 
 ## Gate B — grounded chain, offline (decides grounding)
 ```bash
