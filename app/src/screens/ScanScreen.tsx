@@ -5,33 +5,127 @@ import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-nati
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DisclaimerBanner } from "../components/DisclaimerBanner";
-import { __setMockScenario, scanPipeline, type ScenarioName } from "../engine";
+import { __setMockScenario, scanPipeline, type ScanResult, type ScenarioName } from "../engine";
+import type { MeshStatus, ResultNotice } from "../mesh";
 import type { ScanStackParamList } from "../navigation/types";
 import { useShelf } from "../store/shelf";
 import { colors, font, radius, spacing } from "../theme";
 
 type Props = NativeStackScreenProps<ScanStackParamList, "Scan">;
 
-const SCENARIOS: { name: ScenarioName; label: string }[] = [
-  { name: "major", label: "Major" },
-  { name: "none", label: "No interaction" },
-  { name: "abstain", label: "Abstain" },
-  { name: "delegated", label: "Delegated" },
+type DemoScenarioName =
+  | ScenarioName
+  | "fallback"
+  | "no-peer"
+  | "ocr-fail"
+  | "low-confidence";
+
+type RunOptions = {
+  meshStatus?: MeshStatus;
+  notice?: ResultNotice;
+};
+
+const SCENARIOS: {
+  name: DemoScenarioName;
+  label: string;
+  engineScenario: ScenarioName;
+  options?: RunOptions;
+}[] = [
+  { name: "major", label: "Major", engineScenario: "major" },
+  { name: "none", label: "No interaction", engineScenario: "none" },
+  { name: "abstain", label: "Abstain", engineScenario: "abstain" },
+  {
+    name: "delegated",
+    label: "Delegated",
+    engineScenario: "delegated",
+    options: { meshStatus: "delegating" },
+  },
+  {
+    name: "fallback",
+    label: "Fallback",
+    engineScenario: "major",
+    options: { meshStatus: "fell-back", notice: "fallback" },
+  },
+  {
+    name: "no-peer",
+    label: "No peer",
+    engineScenario: "major",
+    options: { meshStatus: "on-device", notice: "no-peer" },
+  },
+  {
+    name: "ocr-fail",
+    label: "OCR fail",
+    engineScenario: "abstain",
+    options: { notice: "ocr-fail" },
+  },
+  {
+    name: "low-confidence",
+    label: "Low confidence",
+    engineScenario: "abstain",
+    options: { notice: "low-confidence" },
+  },
 ];
+
+function analysisCopy(options?: RunOptions): string {
+  if (options?.meshStatus === "delegating") return "Analyzing on a larger model nearby...";
+  if (options?.meshStatus === "fell-back") return "Checking the nearby anchor, then falling back if needed...";
+  if (options?.notice === "ocr-fail") return "Checking whether the label is readable...";
+  return "Analyzing on-device...";
+}
+
+function shapeDemoResult(result: ScanResult, notice?: ResultNotice): ScanResult {
+  if (notice === "ocr-fail") {
+    return {
+      ...result,
+      scan: { rawText: "Unreadable label", generic: null, matched: false },
+      interactions: [],
+      explanation: "",
+      abstained: true,
+      abstainReason: "unresolved_drug",
+      delegated: false,
+      latencyMs: 900,
+    };
+  }
+
+  if (notice === "low-confidence") {
+    return {
+      ...result,
+      scan: { rawText: "IBU... 200 mg", generic: null, matched: false },
+      interactions: [],
+      explanation: "",
+      abstained: true,
+      abstainReason: "unresolved_drug",
+      delegated: false,
+      latencyMs: 1100,
+    };
+  }
+
+  if (notice === "fallback" || notice === "no-peer") {
+    return { ...result, delegated: false };
+  }
+
+  return result;
+}
 
 export function ScanScreen({ navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
   const [analyzing, setAnalyzing] = useState(false);
+  const [analyzingText, setAnalyzingText] = useState(analysisCopy());
   const shelf = useShelf((s) => s.items);
 
   const runScan = useCallback(
-    async (image: string) => {
+    async (image: string, options?: RunOptions) => {
       if (analyzing) return;
+      setAnalyzingText(analysisCopy(options));
       setAnalyzing(true);
       try {
-        const result = await scanPipeline(image, shelf);
-        navigation.navigate("Result", { result });
+        const result = shapeDemoResult(await scanPipeline(image, shelf), options?.notice);
+        navigation.navigate("Result", {
+          result,
+          meshStatus: options?.meshStatus ?? (result.delegated ? "delegating" : "on-device"),
+          notice: options?.notice,
+        });
       } finally {
         setAnalyzing(false);
       }
@@ -48,9 +142,9 @@ export function ScanScreen({ navigation }: Props) {
   }, [runScan]);
 
   const runScenario = useCallback(
-    (name: ScenarioName) => {
-      __setMockScenario(name);
-      void runScan(`mock://${name}`);
+    (scenario: (typeof SCENARIOS)[number]) => {
+      __setMockScenario(scenario.engineScenario);
+      void runScan(`mock://${scenario.name}`, scenario.options);
     },
     [runScan],
   );
@@ -79,22 +173,34 @@ export function ScanScreen({ navigation }: Props) {
             <Text style={styles.permBody}>
               Pharos reads a medication label on-device. The photo never leaves your phone.
             </Text>
-            <Pressable style={styles.permBtn} onPress={requestPermission}>
+            <Pressable
+              accessibilityRole="button"
+              style={styles.permBtn}
+              onPress={requestPermission}
+            >
               <Text style={styles.permBtnText}>Enable camera</Text>
             </Pressable>
           </View>
         )}
         <View style={styles.reticle} pointerEvents="none" />
         {analyzing ? (
-          <View style={styles.analyzing}>
+          <View
+            accessibilityLiveRegion="polite"
+            accessibilityRole="alert"
+            style={styles.analyzing}
+          >
             <ActivityIndicator color="#fff" />
-            <Text style={styles.analyzingText}>Analyzing on-device…</Text>
+            <Text style={styles.analyzingText}>{analyzingText}</Text>
           </View>
         ) : null}
       </View>
 
       <View style={styles.controls}>
         <Pressable
+          accessibilityHint="Takes a medication label photo and analyzes it on this device."
+          accessibilityLabel="Capture medication label"
+          accessibilityRole="button"
+          accessibilityState={{ disabled: !permission.granted || analyzing }}
           style={[styles.shutter, (!permission.granted || analyzing) && styles.shutterDisabled]}
           onPress={capture}
           disabled={!permission.granted || analyzing}
@@ -102,6 +208,14 @@ export function ScanScreen({ navigation }: Props) {
           <View style={styles.shutterInner} />
         </Pressable>
         <Text style={styles.hint}>Point at a medication label and capture</Text>
+        {shelf.length === 0 ? (
+          <View style={styles.emptyShelf}>
+            <Text style={styles.emptyShelfText}>
+              Shelf is empty. Scans can identify a label, but interaction checks need saved
+              medications.
+            </Text>
+          </View>
+        ) : null}
 
         <View style={styles.devStrip}>
           <Text style={styles.devLabel}>Demo scenarios (mock engine)</Text>
@@ -109,8 +223,11 @@ export function ScanScreen({ navigation }: Props) {
             {SCENARIOS.map((s) => (
               <Pressable
                 key={s.name}
+                accessibilityLabel={`Run ${s.label} demo scenario`}
+                accessibilityRole="button"
+                accessibilityState={{ disabled: analyzing }}
                 style={styles.devBtn}
-                onPress={() => runScenario(s.name)}
+                onPress={() => runScenario(s)}
                 disabled={analyzing}
               >
                 <Text style={styles.devBtnText}>{s.label}</Text>
@@ -170,6 +287,16 @@ const styles = StyleSheet.create({
   shutterDisabled: { opacity: 0.4 },
   shutterInner: { width: 54, height: 54, borderRadius: radius.pill, backgroundColor: colors.accent },
   hint: { color: colors.inkSoft, fontSize: font.small },
+  emptyShelf: {
+    backgroundColor: colors.warnBg,
+    borderColor: "#F0C9BD",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.xs,
+    padding: spacing.md,
+    width: "100%",
+  },
+  emptyShelfText: { color: colors.danger, fontSize: font.small, lineHeight: 18, textAlign: "center" },
   devStrip: { marginTop: spacing.sm, width: "100%", gap: spacing.xs, alignItems: "center" },
   devLabel: { color: colors.inkFaint, fontSize: font.tiny, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
   devRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, justifyContent: "center" },
