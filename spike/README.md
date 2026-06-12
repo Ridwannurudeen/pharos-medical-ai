@@ -45,6 +45,15 @@ MEDPSY_1_7B=/path node spike/gate-b-grounded.ts <label-photo.jpg>
 Runs OCR → normalize + **real DDInter lookup (`data/pharos.db`)** → MedPsy explains the retrieved fact.
 **PASS:** a textbook pair (aspirin label + `Warfarin` shelf → **Major**, cited) returns a correct severity-graded warning; an out-of-dataset drug hits the **ABSTAIN** path; network stays offline. (The lookup half is already verified by `npm run verify`.)
 
+## Validate the real engine — `core/engine-qvac.ts` (run-validation for solo item 1)
+Gate B above inlines its own SDK calls. **This** harness exercises the EXACT shipping module — `createQvacEngine` wired through `createScanPipeline` with the real `pharos.db` grounding and node adapters — so a PASS proves `engine-qvac.ts`'s `ocr()`+`explain()` actually run.
+```bash
+MEDPSY_1_7B=/path/to/medpsy-1.7b-q4_k_m-imat.gguf node spike/validate-engine.ts [label-image]
+# defaults: image=models/label-aspirin.png, MedPsy=models/medpsy-1.7b-q4_k_m-imat.gguf
+```
+**PASS:** aspirin label + `Warfarin` shelf → NOT-abstained, severity **Major**, a non-empty streamed explanation, and a live audit trail printed. Exit 0 = pass.
+**Verified 2026-06-12 (on Windows):** harness imports + core wiring execute cleanly and reach `loadModel` before failing at the known `RPC_INIT_TIMEOUT` — so the script itself is sound; run it on **Linux/Mac/WSL or the phone** to get inference. First run pulls the OCR recognizer + CRAFT detector from **S3 (~15MB, registry models)**; MedPsy is local. Cache once → fully offline thereafter (relevant to the network-proof evidence).
+
 ## Runtime note (verified 2026-05-31)
 `@qvac/sdk` v0.11.0 **installs and imports cleanly in Node** (194 pkgs; `loadModel`/`ocr`/`completion`/`startQVACProvider` are real; `OCR_LATIN_RECOGNIZER_1` is an object), and the MedPsy GGUF downloads + validates. BUT on a sandboxed **Windows dev box the inference worker would not start** — `loadModel()` fails with `RPC_INIT_TIMEOUT` (code 50204, 30s, not configurable). So **run the spike on the real target (mobile dev build / a normal laptop), not in a restricted CI/sandbox.** The grounding half (OCR→normalize→DDInter→explain *minus* the two model calls) is already proven by `npm run verify` (30/30).
 
