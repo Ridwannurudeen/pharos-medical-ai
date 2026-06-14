@@ -39,15 +39,24 @@ tar -C /mnt/c/Users/gudma/pharos --exclude=node_modules --exclude=core/dist -cf 
 cd ~/pharos
 ```
 
-### 3. Install deps + the SDK (Linux bindings)
-`@qvac/sdk` isn't a declared dependency, so it needs its own install.
+### 3. System lib the Bare worker needs
+The SDK's Bare worker (`rocksdb-native` binding) needs `libatomic.so.1`, which the minimal Ubuntu
+image lacks. Without it the worker exits before IPC and you get a misleading `RPC_INIT_TIMEOUT`.
+```bash
+sudo apt-get install -y libatomic1
+```
+
+### 4. Install deps + the SDK (Linux bindings)
+`@qvac/sdk` isn't a declared dependency, so it needs its own install. **Pin the proven version**
+(`0.12.2`, run-verified 2026-06-14); installing unpinned can hit a transient `ETARGET` if a
+transitive dep hasn't propagated to your npm mirror yet — retry, or pin.
 ```bash
 npm install
-npm install @qvac/sdk
+npm install @qvac/sdk@0.12.2
 ```
 ~194 packages, a few minutes. The first `npm install` also compiles `core/dist` (harmless).
 
-### 4. Run the validation (keep WAN ON for this first run — OCR models pull ~15 MB from S3)
+### 5. Run the validation (keep WAN ON for this first run — OCR models pull ~15 MB from S3)
 ```bash
 MEDPSY_1_7B=$PWD/models/medpsy-1.7b-q4_k_m-imat.gguf node spike/validate-engine.ts
 ```
