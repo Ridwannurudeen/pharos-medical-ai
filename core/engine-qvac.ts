@@ -3,10 +3,11 @@
 //
 // Type-verified against @qvac/sdk v0.11.0's installed .d.ts (2026-05-31):
 //   ocr() -> { blocks: Promise<OCRTextBlock[]> } (block.text); completion() -> { tokenStream, text }.
-// NOT yet run-verified: the SDK's native inference worker would not start on this Windows box
-// (packaging gap — ggml backend module fails to load). Validate on the first real-runtime run
-// (phone dev build / Linux / WSL). This file is EXCLUDED from `npm run typecheck` / CI because
-// @qvac/sdk is a heavy native app-runtime dependency not installed in CI.
+// RUN-VERIFIED 2026-06-14 on WSL2 (Ubuntu 24.04) against @qvac/sdk 0.12.2 via spike/validate-engine.ts:
+//   real ocr() read an aspirin label, real explain() streamed a coherent MedPsy answer, grounded Major.
+//   The worker does NOT start on native Windows (RPC_INIT_TIMEOUT, packaging gap); on Linux it only
+//   needs the libatomic1 system lib (see spike/WSL-SETUP.md). This file is EXCLUDED from
+//   `npm run typecheck` / CI because @qvac/sdk is a heavy native app-runtime dependency not in CI.
 //
 // Wiring (at app/anchor startup):
 //   const grounding = createGrounding(queryRunner);                 // expo-sqlite or node:sqlite
@@ -21,6 +22,15 @@ import { OCR_LATIN_RECOGNIZER_1 } from "@qvac/sdk";
 import type { Engine } from "./pipeline.ts";
 import type { Grounding } from "./grounding.ts";
 import { createNormalizer } from "./normalize.ts";
+
+// MedPsy is a reasoning model: it emits a <think>...</think> chain-of-thought before its answer.
+// Return only the content after the (final) </think>; while a think block is still open, return "".
+// Non-reasoning output (no tags) passes through unchanged.
+function stripThinking(s: string): string {
+  let out = s.replace(/<think>[\s\S]*?<\/think>/g, "");
+  const open = out.indexOf("<think>");
+  return open === -1 ? out : out.slice(0, open);
+}
 
 export interface QvacEngineConfig {
   /** for the model-free normalize step (vocabulary match against DDInter) */
@@ -94,11 +104,16 @@ export async function createQvacEngine(
         stream: true,
       });
       let text = "";
+      let emitted = 0;
       for await (const token of run.tokenStream) {
         text += token;
-        opts?.onToken?.(token);
+        const cleaned = stripThinking(text);
+        if (cleaned.length > emitted) {
+          opts?.onToken?.(cleaned.slice(emitted));
+          emitted = cleaned.length;
+        }
       }
-      return { text: text.trim() };
+      return { text: stripThinking(text).trim() };
     },
 
     async close() {
