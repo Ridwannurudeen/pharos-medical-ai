@@ -11,15 +11,15 @@
 //    • expo-sqlite db.getAllSync(sql, params) → rows             (Expo docs; matches QueryRunner)
 //
 //  NOT verified here — MUST be validated on the S25 dev build (no RN runtime in this sandbox):
-//    1. METRO RESOLUTION of `../../../core/engine-qvac`: its only runtime relative import is
-//       `createNormalizer` from "./normalize.ts" (the type-only imports are erased). If Metro
-//       chokes on the explicit `.ts` specifier (the reason core/dist exists), the fix is to add
-//       core/engine-qvac.ts to the core build (tsconfig.build.json → emits core/dist/engine-qvac.js
-//       with clean .js specifiers) and import from "../../../core/dist/engine-qvac.js" instead.
-//       Ping the Lead — that's a one-line tsconfig change he can build+verify on WSL.
-//    2. @qvac/sdk 0.12.2 on Expo SDK 51 / RN 0.74.5 native build (prebuild + autolinking).
-//    3. MedPsy-1.7B GGUF delivery on-device (see config.ts → MEDPSY_MODEL_SRC).
-//    4. pharos.db (~18 MB) shipped as an asset and opened by expo-sqlite (see ensureDatabase()).
+//    1. @qvac/sdk 0.12.2 on Expo SDK 51 / RN 0.74.5 native build (prebuild + autolinking).
+//    2. MedPsy-1.7B GGUF delivery on-device (see config.ts → MEDPSY_MODEL_SRC).
+//    3. pharos.db (~18 MB) shipped as an asset and opened by expo-sqlite (see ensureDatabase()).
+//
+//  RESOLVED — the Metro `.ts`-specifier risk: we import the COMPILED `core/dist/engine-qvac.js`
+//  (emitted with clean `.js` specifiers + a bare `@qvac/sdk` import — verified on WSL). It's
+//  gitignored, so run `npm run build:engine` at the REPO ROOT once (where @qvac is installed,
+//  i.e. after the app's `npm install`) before `expo prebuild`. `build:core` (the prepare/CI build)
+//  still omits engine-qvac, so CI stays @qvac-free.
 //
 // ── HOW TO SWITCH THE APP TO THIS (when ready to prebuild) ───────────────────────────────────────
 //  In app/src/engine/index.ts, change the two engine entry points from the mock to this module,
@@ -30,9 +30,10 @@
 //  App.tsx already calls `loadEngines()` once at startup and ScanScreen calls `scanPipeline(image, shelf)`
 //  — both signatures below match, so no screen changes are needed.
 import * as SQLite from "expo-sqlite";
-// VALUE import only from the source engine — see risk #1 above. Everything else comes from the
-// Metro-safe compiled barrel ("../core" → core/dist) so the mock screens stay @qvac/node-free.
-import { createQvacEngine } from "../../../core/engine-qvac";
+// Import the COMPILED engine (Metro-safe clean .js specifiers; built by `npm run build:engine`).
+// Everything else comes from the compiled barrel ("../core" → core/dist) so the mock screens
+// stay @qvac/node-free.
+import { createQvacEngine } from "../../../core/dist/engine-qvac.js";
 import {
   createGrounding,
   createScanPipeline,

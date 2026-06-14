@@ -1,0 +1,14 @@
+{
+  "extends": "./tsconfig.json",
+  "_comment": "Builds core/engine-qvac.ts (the @qvac/sdk-backed engine) into core/dist with clean .js import specifiers, so the RN app can import core/dist/engine-qvac.js without Metro hitting .ts specifiers. SEPARATE from build:core/prepare on purpose: it imports @qvac/sdk, which is NOT installed in CI — run it (npm run build:engine) only where @qvac is present (app/anchor machine after npm install, or WSL).",
+  "compilerOptions": {
+    "noEmit": false,
+    "declaration": true,
+    "rootDir": "core",
+    "outDir": "core/dist",
+    "rewriteRelativeImportExtensions": true,
+    "allowImportingTsExtensions": true
+  },
+  "include": ["core/engine-qvac.ts"],
+  "exclude": ["scripts", "core/dist"]
+}
