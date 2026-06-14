@@ -74,6 +74,53 @@ type Interaction = {
 
 You own the **user's medication shelf** storage yourself — **`expo-secure-store`** (OS-keystore encryption at rest; approved over `expo-sqlite` for this short list). Caveat: ~2 KB/value limit on Android — fine for a short shelf as a JSON blob; move to SQLite/SQLCipher if it goes relational. Add/remove meds; pass the shelf into the scan. The Lead owns the read-only bundled interaction DB; you never read it directly.
 
+## Wiring the REAL engine (run-validated 2026-06-14) — NOT a one-line swap
+
+Heads-up: the `../core` barrel's `scanPipeline` **is a mock and stays one.** It can't silently
+"become real" — the real pipeline needs platform adapters *injected* (the QVAC engine + an
+expo-sqlite `QueryRunner`), and pulling `@qvac/sdk`/`expo-sqlite` into the bundle-safe barrel
+would break Metro. So the real engine is **composed in the app**, in its own module. This
+**supersedes** the old "never import `../core/engine-qvac` / don't call `@qvac` directly" rule
+*for the real path* — that rule predates the finding that `@qvac/sdk` runs on Android via a
+`react-native-bare-kit` worklet Metro never bundles (researched 2026-06-12, run-validated on
+WSL2 2026-06-14). The barrel stays mock-only for the screens you've already built.
+
+**Verified facts** (read from source / run on real inference):
+- Engine validated end-to-end on **`@qvac/sdk@0.12.2`** (latest — NOT 0.11.0): real `ocr()` read an
+  aspirin label → grounded DDInter **Major** → MedPsy `explain()` streamed a coherent answer. PASS.
+- `QueryRunner = (sql, params) => Record<string,unknown>[]` is **synchronous** (`core/grounding.ts`).
+  expo-sqlite's `db.getAllSync(sql, params)` matches it directly.
+- `createQvacEngine({ grounding, medpsyModelSrc })` → the `Engine` for `createScanPipeline({ engine, grounding, audit, clock })`. `medpsyModelSrc` is a **local** GGUF path.
+
+**Install (in `app/`):** `npm i @qvac/sdk@0.12.2 react-native-bare-kit@0.12.3 expo-sqlite` ·
+`app.json` plugins: `["expo-build-properties", { "android": { "minSdkVersion": 29 } }]` + `"@qvac/sdk/expo-plugin"` ·
+then `npx expo prebuild && npx expo run:android` (dev build, **physical device**, not Expo Go).
+Ship `pharos.db` (~18 MB) as a bundled asset, copy it to a writable dir, then `openDatabaseSync` it.
+
+**Composition module — `app/src/engine/real.ts`** (signatures verified; **run-validate on device**):
+```ts
+import * as SQLite from "expo-sqlite";
+import { createQvacEngine } from "../../../core/engine-qvac";          // real path — OK on device
+import { createGrounding, createScanPipeline, createAuditLog, memorySink } from "../../../core";
+import type { QueryRunner } from "../../../core";
+
+const expoQueryRunner = (db: SQLite.SQLiteDatabase): QueryRunner =>
+  (sql, params) => db.getAllSync(sql, params as SQLite.SQLiteBindValue[]) as Record<string, unknown>[];
+
+export async function makeRealScanPipeline(o: { dbPath: string; medpsyModelSrc: string; deviceId: string }) {
+  const db = SQLite.openDatabaseSync(o.dbPath);            // bundled pharos.db, copied to a writable dir first
+  const grounding = createGrounding(expoQueryRunner(db));
+  const engine = await createQvacEngine({ grounding, medpsyModelSrc: o.medpsyModelSrc }); // loads OCR + MedPsy
+  const t0 = Date.now();
+  const clock = { isoNow: () => new Date().toISOString(), monotonicMs: () => Date.now() - t0 };
+  const audit = createAuditLog({ deviceId: o.deviceId, sink: memorySink().sink, clock });
+  return createScanPipeline({ engine, grounding, audit, clock });     // same scanPipeline(image, shelf, opts) the screens call
+}
+```
+Because this is an **async init** (it loads models), it goes in an app-startup effect / context
+provider, not a static `export ... from`. The screens keep calling `scanPipeline(image, shelf, { onToken })`
+unchanged — only what produces it changes. `<think>` is already stripped in `core/engine-qvac.ts`.
+
 ## Screens to build
 
 1. **Scan** — camera capture (`expo-camera` or `react-native-vision-camera`) → `scanPipeline(image)`. Show capture → analyzing → result.
@@ -97,7 +144,7 @@ You own the **user's medication shelf** storage yourself — **`expo-secure-stor
 
 ## Rules of the road
 
-- **Don't call `@qvac/sdk` directly, and don't read the datasets.** Everything goes through `core/`. If you need something `core/` doesn't expose, ask the Lead to add it to the contract — don't reach around it.
+- **For the screens, everything goes through the `../core` barrel** (the mock) — don't call `@qvac/sdk` directly there. **Exception:** the real-engine composition module (`app/src/engine/real.ts`, see "Wiring the REAL engine" above) deliberately imports `../core/engine-qvac` + `@qvac/sdk` + `expo-sqlite`. That's the one sanctioned place; keep it isolated so the mock screens stay bundle-safe.
 - **Any change you'd want to `core/index.ts` signatures = a conversation first.** The contract is frozen Day 2; changes are announced before merging.
 - **Offline is the whole point.** No network calls, no analytics, no remote fonts/images, no crash reporters that phone home. The demo runs in airplane mode with a packet capture proving zero traffic — anything you add that talks to the network breaks the core claim.
 - **The disclaimer is always on screen** in any medical-content view. The abstain path must never be bypassed by UI.
