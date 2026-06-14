@@ -25,7 +25,16 @@
           "cameraPermission": "Pharos uses the camera only to read a medication label on-device. No photo ever leaves your phone."
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "minSdkVersion": 29
+          }
+        }
+      ],
+      "@qvac/sdk/expo-plugin"
     ]
   }
 }

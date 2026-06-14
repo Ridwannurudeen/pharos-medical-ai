@@ -10,6 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@qvac/sdk": "0.12.2",
+    "react-native-bare-kit": "^0.14.0",
     "expo": "~51.0.39",
     "expo-camera": "~15.0.16",
     "expo-dev-client": "~4.0.29",
