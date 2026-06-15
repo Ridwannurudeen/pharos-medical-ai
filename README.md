@@ -44,7 +44,7 @@ pharos/
 
 **Data + verification (works today — needs only Node ≥24, zero runtime deps):**
 1. `npm run data` — fetch DDInter and build `data/pharos.db`.
-2. `npm run verify` — assert the grounded chain + abstain + audit (32 checks).
+2. `npm run verify` — assert the grounded chain + abstain + audit + resource log (38 checks).
 3. `npm install` then `npm run typecheck` — type-check `core/` + `scripts/` (install is only needed for this step).
 
 **App + mesh (June 1):**
@@ -55,7 +55,7 @@ pharos/
 
 Full, verified reproduce-the-results guide: **[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md)** — environment/versions, exact commands + expected outputs at three levels (grounding chain · real engine on real inference · P2P mesh delegation), the offline/network claims, and the gotchas.
 
-- One-command verifier: `npm run verify` runs the grounded chain + abstain + audit (32 checks).
+- One-command verifier: `npm run verify` runs the grounded chain + abstain + audit + resource-log (38 checks).
 - Real-inference harnesses: `spike/validate-engine.ts` (grounded Major), `spike/validate-safety.ts` (abstain + no-fabrication) — both PASS on `@qvac/sdk@0.12.2` (non-Windows).
 - Remote API calls for inference: **none** (all OCR + MedPsy local; see REPRODUCIBILITY.md for the two network touchpoints).
 

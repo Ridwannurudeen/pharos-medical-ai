@@ -6,6 +6,7 @@ import { DatabaseSync } from "node:sqlite";
 import { appendFileSync } from "node:fs";
 import type { QueryRunner } from "./grounding.ts";
 import type { Sink, Clock } from "./audit.ts";
+import type { ResourceSample } from "./resource-log.ts";
 
 type SqlParam = string | number | bigint | null | Uint8Array;
 
@@ -26,5 +27,25 @@ export function nodeClock(): Clock {
   return {
     isoNow: () => new Date().toISOString(),
     monotonicMs: () => Date.now() - t0,
+  };
+}
+
+/** A resource sampler for Node (anchor/CLI): process CPU% (of one core) since the last sample +
+ *  resident memory. Battery is -1 (Node has no battery API; the RN app supplies it via expo-battery). */
+export function nodeResourceSampler(): () => ResourceSample {
+  let lastCpu = process.cpuUsage();
+  let lastNs = process.hrtime.bigint();
+  return () => {
+    const nowCpu = process.cpuUsage();
+    const nowNs = process.hrtime.bigint();
+    const cpuMicros =
+      nowCpu.user - lastCpu.user + (nowCpu.system - lastCpu.system);
+    const wallMicros = Number(nowNs - lastNs) / 1000;
+    lastCpu = nowCpu;
+    lastNs = nowNs;
+    const cpuPct =
+      wallMicros > 0 ? Math.round((cpuMicros / wallMicros) * 1000) / 10 : -1;
+    const ramMb = Math.round(process.memoryUsage().rss / 1_048_576);
+    return { cpuPct, ramMb, batteryPct: -1 };
   };
 }

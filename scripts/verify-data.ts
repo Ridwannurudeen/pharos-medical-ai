@@ -8,7 +8,11 @@ import { createGrounding } from "../core/grounding.ts";
 import { createAuditLog, memorySink } from "../core/audit.ts";
 import { createScanPipeline } from "../core/pipeline.ts";
 import { createNormalizer } from "../core/normalize.ts";
-import { nodeQueryRunner } from "../core/adapters-node.ts";
+import {
+  createResourceLog,
+  RESOURCE_CSV_HEADER,
+} from "../core/resource-log.ts";
+import { nodeQueryRunner, nodeResourceSampler } from "../core/adapters-node.ts";
 
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), "..");
 const db = new DatabaseSync(join(ROOT, "data", "pharos.db"), {
@@ -306,6 +310,43 @@ check(
     r.interactions[0]?.severity,
     "Major",
   );
+}
+
+// --- resource-log writer (CSV, docs/audit-log-schema.md) ---
+{
+  const mem = memorySink();
+  const rl = createResourceLog({
+    deviceId: "res-1",
+    sink: mem.sink,
+    clock: { isoNow: () => "2026-06-01T00:00:00.000Z", monotonicMs: () => 7 },
+    sample: () => ({ cpuPct: 12.5, ramMb: 345, batteryPct: 88 }),
+  });
+  rl.header();
+  rl.tick();
+  rl.tick();
+  check(
+    "resource: header is the documented CSV columns",
+    mem.lines[0],
+    RESOURCE_CSV_HEADER,
+  );
+  check("resource: one row per tick", mem.lines.length, 3);
+  check(
+    "resource: row = clock + device + sample + network_state",
+    mem.lines[1],
+    "2026-06-01T00:00:00.000Z,7,res-1,12.5,345,88,offline",
+  );
+}
+
+// node resource sampler (exercises core/adapters-node.ts on the real process)
+{
+  const s = nodeResourceSampler()();
+  check("node sampler: ram_mb is positive", s.ramMb > 0, true);
+  check(
+    "node sampler: cpu_pct is a number >= -1",
+    typeof s.cpuPct === "number" && s.cpuPct >= -1,
+    true,
+  );
+  check("node sampler: battery is -1 on Node", s.batteryPct, -1);
 }
 
 db.close();
