@@ -11,7 +11,7 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 ## The idea — one product, two tiers
 
 - **🟢 Solo tier (works on any one phone, airplane mode):** OCR a pill bottle/label → normalize to the drug's generic name → look up interactions against your saved medication shelf → MedPsy explains the result in plain language. Everything on-device; provable with a zero-traffic network capture.
-- **🔵 Mesh tier (kicks in when peers are present, still offline):** a high-risk case is delegated over the Holepunch DHT to a laptop "anchor" running a larger MedPsy model; a fresh device can pull the model from a peer with no internet; if the anchor drops mid-answer, another peer resumes.
+- **🔵 Mesh tier (kicks in when a peer anchor is present):** a case is delegated over the Holepunch DHT to a laptop "anchor" running the larger MedPsy-4B; OCR + grounding stay on the phone. If the anchor is unreachable, it falls back to the on-device model (`fallbackToLocal`). *Verified against the SDK: peer-to-peer model **pull** and mid-stream peer-failover are **not** supported — mesh is tier-1 delegation only, and peer discovery uses the DHT, which needs WAN to bootstrap (so the mesh tier is local-network, not airplane-mode; the solo tier is the offline story).*
 
 **Tracks:** General Purpose + Psy Models (MedPsy).
 
@@ -38,13 +38,13 @@ pharos/
 - `expo-camera` / `react-native-vision-camera`, `expo-sqlite`, `expo-network`
 - Node.js for the laptop anchor node
 
-> ✅ Verified `@qvac/sdk` signatures (v0.11.0) are recorded in [`docs/qvac-sdk-reference.md`](docs/qvac-sdk-reference.md) — including two corrections to the mesh plan (delegation is configured via `loadModel({ delegate })`, and mid-stream peer-failover is **not** an SDK feature; `fallbackToLocal` is). Confirm against the live docs (https://docs.qvac.tether.io/reference/api/) if the SDK version changes.
+> ✅ The engine is **run-validated on `@qvac/sdk@0.12.2`** (real OCR + MedPsy, grounded Major + abstain + no-fabrication; see [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md)). Signatures + mesh-plan corrections are in [`docs/qvac-sdk-reference.md`](docs/qvac-sdk-reference.md) (delegation via `loadModel({ delegate })`; no mid-stream failover — `fallbackToLocal` instead). Confirm against the live docs (https://docs.qvac.tether.io/reference/api/) if the SDK version changes.
 
 ## Setup
 
 **Data + verification (works today — needs only Node ≥24, zero runtime deps):**
 1. `npm run data` — fetch DDInter and build `data/pharos.db`.
-2. `npm run verify` — assert the grounded chain (8/8 checks).
+2. `npm run verify` — assert the grounded chain + abstain + audit (32 checks).
 3. `npm install` then `npm run typecheck` — type-check `core/` + `scripts/` (install is only needed for this step).
 
 **App + mesh (June 1):**
@@ -53,9 +53,11 @@ pharos/
 
 ## Reproducibility (required by judges)
 
-- One-command verifier: `npm run verify` runs the full grounded chain over a fixed fixture set and asserts the expected drug class + interaction warning.
-- Declared hardware specs (CPU/GPU/RAM/storage) + system-profiler screenshots.
-- Structured file listing any remote API calls (target: none — all inference is local).
+Full, verified reproduce-the-results guide: **[`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md)** — environment/versions, exact commands + expected outputs at three levels (grounding chain · real engine on real inference · P2P mesh delegation), the offline/network claims, and the gotchas.
+
+- One-command verifier: `npm run verify` runs the grounded chain + abstain + audit (32 checks).
+- Real-inference harnesses: `spike/validate-engine.ts` (grounded Major), `spike/validate-safety.ts` (abstain + no-fabrication) — both PASS on `@qvac/sdk@0.12.2` (non-Windows).
+- Remote API calls for inference: **none** (all OCR + MedPsy local; see REPRODUCIBILITY.md for the two network touchpoints).
 
 ## Verification artifacts
 
@@ -68,4 +70,4 @@ Interaction warnings are **retrieved** from real datasets (not generated). See [
 
 ## License
 
-Code: **Apache-2.0** (add the official `LICENSE` file — see LAUNCH-CHECKLIST). Bundled datasets retain their own licenses (see `NOTICE`).
+Code: **Apache-2.0** (see [`LICENSE`](LICENSE)). Bundled datasets retain their own licenses (see `NOTICE`).
