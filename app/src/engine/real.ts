@@ -48,6 +48,7 @@ import {
   DEVICE_ID,
   MESH_DELEGATE,
   ensureDatabase,
+  ensureModel,
 } from "./config";
 
 // expo-sqlite's getAllSync is synchronous and returns every row — exactly the QueryRunner shape.
@@ -73,6 +74,7 @@ let _loading: Promise<void> | null = null;
 
 async function init(): Promise<void> {
   await ensureDatabase(); // copy the bundled DB into the writable SQLite dir on first run
+  await ensureModel(); // download MedPsy-1.7B on first launch (online once; offline after)
   const db = SQLite.openDatabaseSync(DB_NAME);
   const grounding = createGrounding(expoQueryRunner(db));
   // Loads the OCR recognizer (+ CRAFT detector, ~15 MB from S3 on first run, then cached) and MedPsy.
