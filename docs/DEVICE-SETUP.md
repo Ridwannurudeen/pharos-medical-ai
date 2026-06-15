@@ -7,6 +7,12 @@ platform build. Mesh comes after (see [`MESH-RUNBOOK.md`](MESH-RUNBOOK.md)).
 > Runs on **your** hardware (Pixel 10 Pro XL / S25). The Lead can't drive an Android build remotely —
 > follow these, paste any error back. Every command/path below was checked against the repo.
 
+> ⚠️ **Read [`EXPO54-BUILD.md`](EXPO54-BUILD.md) first — it supersedes this for the build environment.**
+> This guide predates the verified finding that QVAC 0.12.2 **requires Expo SDK 54 / RN 0.81** (on Expo 51
+> the QVAC native runtime cannot be packaged at all) and needs **NDK 27.0.12077973** + the babel-preset
+> pin. `EXPO54-BUILD.md` is the current, end-to-end-verified recipe (build → APK with the full runtime →
+> runs on a Pixel 10 Pro XL). The camera/scan/flip steps below still apply once you're on Expo 54.
+
 ## 0. Prereqs (dev machine)
 - Node 24, the Android SDK + JDK 17 (Android Studio), and `adb`. A **physical** Android phone (no
   emulator) with **Developer options + USB debugging** on, plugged in (`adb devices` shows it).
