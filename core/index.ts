@@ -13,6 +13,7 @@ export * from "./grounding.ts";
 export * from "./audit.ts";
 export * from "./pipeline.ts";
 export * from "./normalize.ts";
+export * from "./resource-log.ts";
 export { norm } from "./text.ts";
 
 const clone = <T>(x: T): T => JSON.parse(JSON.stringify(x)) as T;

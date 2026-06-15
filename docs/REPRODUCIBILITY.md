@@ -17,11 +17,11 @@ Everything here was run and verified, not asserted. Three levels: (1) the data/g
 
 ```bash
 npm run data      # fetch DDInter 2.0 and build data/pharos.db (gitignored, ~18 MB)
-npm run verify    # 32 checks over the grounded chain + abstain + audit round-trip
+npm run verify    # 38 checks: grounded chain + abstain + audit + resource-log writers
 ```
-Expected: `ALL CHECKS PASSED` (32/32). This proves the model-free core: name resolution (incl.
-synonyms), DDInter lookup with severity + provenance, the abstain logic, and the audit writer — all
-deterministic, no inference.
+Expected: `ALL CHECKS PASSED` (38/38). This proves the model-free core: name resolution (incl.
+synonyms), DDInter lookup with severity + provenance, the abstain logic, and the audit + resource-log
+writers — all deterministic, no inference.
 
 ## Level 2 — the REAL engine on real inference (non-Windows + MedPsy-1.7B)
 
