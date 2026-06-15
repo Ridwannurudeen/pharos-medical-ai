@@ -9,12 +9,14 @@ import * as FileSystem from "expo-file-system";
 /** Filename opened by `SQLite.openDatabaseSync(DB_NAME)`. expo-sqlite looks in <documentDir>/SQLite/. */
 export const DB_NAME = "pharos.db";
 
-// TODO(dolepee): how the ~1.28 GB MedPsy-1.7B GGUF gets onto the device and its on-disk path.
-// QVAC loadModel() takes a local filesystem path. Options: (a) download once on first launch via
-// FileSystem.downloadAsync from a URL you control, into <documentDir>models/, or (b) sideload via adb
-// push for the demo build. Bundling it as an Expo asset is NOT advisable at that size. Set the final
-// absolute path here once decided.
+// MedPsy-1.7B GGUF (~1.28 GB). QVAC loadModel() takes a local path. Downloaded once on first launch
+// (online) into <documentDir>models/ by ensureModel(); offline on every run after. Too big to bundle
+// as an asset; adb-pushing into app-private storage isn't reliable on a non-rooted phone, so
+// download-on-first-launch is the path. (For a deterministic demo with no first-run wait, pre-stage
+// the file at this path via a dev build that has filesystem access, then ensureModel() is a no-op.)
 export const MEDPSY_MODEL_SRC = `${FileSystem.documentDirectory}models/medpsy-1.7b-q4_k_m-imat.gguf`;
+export const MEDPSY_MODEL_URL =
+  "https://huggingface.co/qvac/MedPsy-1.7B-GGUF/resolve/main/medpsy-1.7b-q4_k_m-imat.gguf?download=true";
 
 // TODO(dolepee): a stable per-install id for the audit log. A constant is fine for the demo; for a real
 // per-install id, generate a UUID once and persist it in expo-secure-store, or use expo-device.
@@ -51,4 +53,25 @@ export async function ensureDatabase(): Promise<void> {
   await asset.downloadAsync();
   if (!asset.localUri) throw new Error("pharos.db asset has no localUri");
   await FileSystem.copyAsync({ from: asset.localUri, to: dest });
+}
+
+/**
+ * Ensure the MedPsy-1.7B GGUF is on disk at MEDPSY_MODEL_SRC, downloading it once on first launch.
+ * Idempotent — skips if already present. ~1.28 GB, so show a progress UI in the app (downloadAsync
+ * with a DownloadResumable for progress); this minimal version blocks until done.
+ *
+ * NOT run-validated here (no RN runtime) — confirm on device. After the first (online) run the model
+ * is local and every scan is fully offline.
+ */
+export async function ensureModel(): Promise<void> {
+  const info = await FileSystem.getInfoAsync(MEDPSY_MODEL_SRC);
+  if (info.exists) return;
+  const dir = MEDPSY_MODEL_SRC.slice(0, MEDPSY_MODEL_SRC.lastIndexOf("/"));
+  await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
+  const res = await FileSystem.downloadAsync(
+    MEDPSY_MODEL_URL,
+    MEDPSY_MODEL_SRC,
+  );
+  if (res.status !== 200)
+    throw new Error(`MedPsy model download failed: HTTP ${res.status}`);
 }
