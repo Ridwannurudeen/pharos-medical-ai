@@ -94,13 +94,15 @@ WSL2 2026-06-14). The barrel stays mock-only for the screens you've already buil
 
 **Install (in `app/`):** `npm i @qvac/sdk@0.12.2 react-native-bare-kit@0.12.3 expo-sqlite` ·
 `app.json` plugins: `["expo-build-properties", { "android": { "minSdkVersion": 29 } }]` + `"@qvac/sdk/expo-plugin"` ·
-then `npx expo prebuild && npx expo run:android` (dev build, **physical device**, not Expo Go).
+then **`npm run build:engine` at the repo root** (emits the Metro-safe `core/dist/engine-qvac.js`;
+needs `@qvac` installed, so run after the app's `npm install`), then
+`npx expo prebuild && npx expo run:android` (dev build, **physical device**, not Expo Go).
 Ship `pharos.db` (~18 MB) as a bundled asset, copy it to a writable dir, then `openDatabaseSync` it.
 
 **Composition module — `app/src/engine/real.ts`** (signatures verified; **run-validate on device**):
 ```ts
 import * as SQLite from "expo-sqlite";
-import { createQvacEngine } from "../../../core/engine-qvac";          // real path — OK on device
+import { createQvacEngine } from "../../../core/dist/engine-qvac.js";  // compiled (npm run build:engine)
 import { createGrounding, createScanPipeline, createAuditLog, memorySink } from "../../../core";
 import type { QueryRunner } from "../../../core";
 

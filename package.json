@@ -15,6 +15,7 @@
     "verify": "node scripts/verify-data.ts",
     "typecheck": "tsc --noEmit",
     "build:core": "tsc -p tsconfig.build.json",
+    "build:engine": "tsc -p tsconfig.engine.json",
     "prepare": "npm run build:core"
   },
   "devDependencies": {
