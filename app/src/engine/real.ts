@@ -42,7 +42,13 @@ import {
   type ExplainOptions,
 } from "../../../core";
 import type { ScanResult, ShelfItem } from "./contract";
-import { DB_NAME, MEDPSY_MODEL_SRC, DEVICE_ID, ensureDatabase } from "./config";
+import {
+  DB_NAME,
+  MEDPSY_MODEL_SRC,
+  DEVICE_ID,
+  MESH_DELEGATE,
+  ensureDatabase,
+} from "./config";
 
 // expo-sqlite's getAllSync is synchronous and returns every row — exactly the QueryRunner shape.
 const expoQueryRunner =
@@ -70,9 +76,11 @@ async function init(): Promise<void> {
   const db = SQLite.openDatabaseSync(DB_NAME);
   const grounding = createGrounding(expoQueryRunner(db));
   // Loads the OCR recognizer (+ CRAFT detector, ~15 MB from S3 on first run, then cached) and MedPsy.
+  // When MESH_DELEGATE is set, MedPsy explanation runs on the nearby anchor (OCR + grounding stay local).
   const engine = await createQvacEngine({
     grounding,
     medpsyModelSrc: MEDPSY_MODEL_SRC,
+    ...(MESH_DELEGATE ? { delegate: MESH_DELEGATE } : {}),
   });
   const t0 = Date.now();
   const clock = {

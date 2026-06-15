@@ -20,6 +20,17 @@ export const MEDPSY_MODEL_SRC = `${FileSystem.documentDirectory}models/medpsy-1.
 // per-install id, generate a UUID once and persist it in expo-secure-store, or use expo-device.
 export const DEVICE_ID = "pharos-phone";
 
+// MESH (optional, gated): when set, the MedPsy explanation is delegated to a nearby anchor running the
+// bigger MedPsy-4B (the phone still does OCR + DDInter grounding locally). null = solo (on-device only).
+// providerPublicKey = the key printed by the laptop anchor's `spike/gate-a-provider.ts`.
+// fallbackToLocal:true means a delegation failure silently degrades to the on-device 1.7B (resilience;
+// the SDK has NO mid-stream auto peer-failover). Set this only after the cross-device Gate A run passes.
+export const MESH_DELEGATE: {
+  providerPublicKey: string;
+  timeout?: number;
+  fallbackToLocal?: boolean;
+} | null = null;
+
 /**
  * Copy the bundled pharos.db into the writable SQLite directory on first run, so openDatabaseSync
  * can open it. Idempotent — skips if already copied.
