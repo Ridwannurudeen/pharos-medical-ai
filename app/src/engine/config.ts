@@ -23,8 +23,15 @@ export const DEVICE_ID = "pharos-phone";
 
 // MESH (optional, gated): when set, the MedPsy explanation is delegated to a nearby anchor running the
 // bigger MedPsy-4B (the phone still does OCR + DDInter grounding locally). null = solo (on-device only).
+//  - providerPublicKey: the key printed by the anchor's provider script.
+//  - modelSrc: the 4B GGUF path ON THE ANCHOR'S filesystem (delegation resolves the path on the
+//    provider — verified cross-device 2026-06-16 — so this is the anchor's path, e.g.
+//    "/home/<user>/anchor/models/medpsy-4b-q4_k_m-imat.gguf", NOT a phone path).
+//  - fallbackToLocal: keep false (true would try the anchor path on the phone and fail). For
+//    anchor-down resilience, set MESH_DELEGATE back to null so the phone runs the solo on-device model.
 export const MESH_DELEGATE: {
   providerPublicKey: string;
+  modelSrc: string;
   timeout?: number;
   fallbackToLocal?: boolean;
 } | null = null;

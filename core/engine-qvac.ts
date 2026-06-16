@@ -37,10 +37,17 @@ export interface QvacEngineConfig {
   grounding: Grounding;
   /** path or pear:// key to the MedPsy GGUF (e.g. medpsy-1.7b-q4_k_m-imat.gguf) */
   medpsyModelSrc: string;
-  /** optional: run explain() on a mesh peer (Gate A) instead of locally */
+  /** optional: run explain() on a mesh peer (Gate A) instead of locally.
+   *  Delegation resolves `modelSrc` on the PROVIDER's filesystem (verified cross-device 2026-06-16),
+   *  so `modelSrc` here is the path to the model ON THE ANCHOR (e.g. its MedPsy-4B GGUF), NOT the
+   *  phone's local path. cfg.medpsyModelSrc is used only for the non-delegated (solo) path. */
   delegate?: {
     providerPublicKey: string;
+    /** path to the MedPsy GGUF ON THE ANCHOR (provider-side), e.g. ~/anchor/models/medpsy-4b-...gguf */
+    modelSrc: string;
     timeout?: number;
+    /** Keep false for mesh: true would try the anchor path locally (paths differ → fails). Handle
+     *  anchor-down at the app level by running without a delegate (the solo on-device model). */
     fallbackToLocal?: boolean;
   };
 }
@@ -57,11 +64,19 @@ export async function createQvacEngine(
     modelSrc: OCR_LATIN_RECOGNIZER_1,
     modelType: "onnx-ocr",
   });
-  const llmModelId = await loadModel({
-    modelSrc: cfg.medpsyModelSrc,
-    modelType: "llm",
-    ...(cfg.delegate ? { delegate: cfg.delegate } : {}),
-  });
+  // Solo: load the phone's local MedPsy. Mesh: delegate explain to the anchor — load the ANCHOR's
+  // model by its provider-side path (delegation resolves modelSrc on the provider's disk, so the
+  // phone's local path would be wrong; verified cross-device 2026-06-16).
+  let llmModelId: Awaited<ReturnType<typeof loadModel>>;
+  if (cfg.delegate) {
+    const { modelSrc, ...delegate } = cfg.delegate;
+    llmModelId = await loadModel({ modelSrc, modelType: "llm", delegate });
+  } else {
+    llmModelId = await loadModel({
+      modelSrc: cfg.medpsyModelSrc,
+      modelType: "llm",
+    });
+  }
   const normalize = createNormalizer(cfg.grounding);
 
   return {
