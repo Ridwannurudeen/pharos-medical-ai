@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Tech &amp; reproducibility — Pharos</title>
+  <meta name="description" content="Pharos's stack, the three-level reproducibility story, and the verified facts: a 38-check suite, the real engine on QVAC 0.12.2, and cross-device mesh delegation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav wrap">
+      <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="demo.html">Demo</a>
+        <a href="tech.html">Tech</a>
+        <a href="safety.html">Safety</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap" style="padding-bottom:32px">
+      <p class="eyebrow">Tech &amp; reproducibility</p>
+      <h1>Everything here was <span class="mint">run, not asserted.</span></h1>
+      <p class="lede">Three levels of reproducibility, with exact commands and expected outputs in the repo. No remote API calls for inference — all OCR and MedPsy run locally.</p>
+    </section>
+
+    <section class="wrap" style="padding-top:8px">
+      <div class="grid grid-3">
+        <div class="card"><h3>1 · Data &amp; grounding</h3><p>Any machine, no models. <code>npm run verify</code> runs a <strong>38-check</strong> suite over name resolution, DDInter lookup, the abstain logic, and the audit + resource-log writers — all deterministic.</p></div>
+        <div class="card"><h3>2 · Real engine</h3><p>On Linux/WSL2 with a MedPsy GGUF: live OCR reads a label → resolves → DDInter <strong>Major</strong> → a streamed explanation, plus abstain and no-fabrication checks on real inference.</p></div>
+        <div class="card"><h3>3 · P2P mesh</h3><p>An anchor provider + a consumer delegate a completion over the DHT and the answer arrives from the provider — proven across two physical machines.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><p class="eyebrow">The stack</p><h2>Built end-to-end on QVAC</h2></div>
+      <div class="grid grid-2">
+        <div class="card"><h3>App</h3><p>React Native via Expo (SDK 54 / RN 0.81), <code>expo-camera</code>, <code>expo-sqlite</code> for the interaction DB, device keystore for the shelf. Hermes JS engine.</p></div>
+        <div class="card"><h3>Inference</h3><p>Tether <code>@qvac/sdk</code> for <em>all</em> inference — OCR and MedPsy completion — running on-device via a Bare worklet, with GPU backends on Android (Vulkan/OpenCL). P2P delegation over Holepunch.</p></div>
+        <div class="card"><h3>Data</h3><p><strong>DDInter 2.0</strong> — ~160k drug-drug interaction pairs with severity, bundled offline as a generated SQLite database. Generic-name matching with a synonym table.</p></div>
+        <div class="card"><h3>Evidence</h3><p>A JSONL audit log of the grounded chain, a CSV resource log of on-device cost, and a packet capture proving zero outbound inference traffic offline.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><p class="eyebrow">Verified facts</p><h2>What's been proven</h2></div>
+      <ul class="facts">
+        <li>Grounded pipeline + abstain + no-fabrication + audit + resource log: 38/38 deterministic checks pass.</li>
+        <li>Real engine run-validated on <code>@qvac/sdk@0.12.2</code>: aspirin label → acetylsalicylic acid → DDInter <strong>Major</strong>, cited; paracetamol → abstain.</li>
+        <li>Cross-device mesh: a 4B-anchor delegation, two physical machines over the DHT, answer from the provider (local fallback disabled).</li>
+        <li>Solo tier does zero network I/O during a scan after the one-time OCR-model fetch.</li>
+      </ul>
+      <div class="callout" style="margin-top:22px">Full reproduce-the-results guide — environment, exact commands, expected outputs, and the offline/network claims — lives in <code>docs/REPRODUCIBILITY.md</code> in the repository.</div>
+      <div class="btn-row" style="margin-top:24px">
+        <a class="btn btn-primary" href="https://github.com/Ridwannurudeen/pharos-medical-ai">View the repository →</a>
+        <a class="btn btn-ghost" href="safety.html">Safety &amp; data</a>
+      </div>
+      <p class="disclaimer" style="margin-top:12px">The repository is made public, Apache-2.0, at submission.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap cols">
+      <div><a class="brand" href="index.html"><span class="dot"></span> Pharos</a><p style="margin:10px 0 0; max-width:34ch">Private medical AI that works alone, and gets stronger together.</p></div>
+      <div class="links"><a href="how-it-works.html">How it works</a><a href="mesh.html">Mesh</a><a href="demo.html">Demo</a><a href="tech.html">Tech</a><a href="safety.html">Safety</a></div>
+    </div>
+    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Educational information only, not medical advice · Interaction data: DDInter 2.0 (CC BY-NC 4.0)</div>
+  </footer>
+  <script src="assets/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Demo — Pharos</title>
+  <meta name="description" content="See Pharos catch a Major interaction, abstain on an unverifiable label, and run a scan in airplane mode — plus the cross-device mesh delegation." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav wrap">
+      <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="demo.html">Demo</a>
+        <a href="tech.html">Tech</a>
+        <a href="safety.html">Safety</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap" style="padding-bottom:32px">
+      <p class="eyebrow">Demo</p>
+      <h1>See it <span class="mint">catch, abstain, and run offline.</span></h1>
+      <p class="lede">A short walkthrough on a real phone: a dangerous pair caught and explained, an unverifiable label safely refused, and a scan completing in airplane mode.</p>
+    </section>
+
+    <section class="wrap" style="padding-top:8px">
+      <div class="video-frame">
+        <div>
+          <div style="font-size:2rem">▶</div>
+          <div style="margin-top:8px">Demo video coming soon</div>
+          <div style="font-size:0.82rem; margin-top:4px">≤5 min · recorded on a Pixel 10 Pro XL</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><p class="eyebrow">What you'll see</p><h2>The scripted, pre-verified cases</h2></div>
+      <div class="grid grid-3">
+        <div class="card">
+          <div class="scan-row" style="margin-bottom:10px"><span class="severity major">Major</span><strong>Aspirin + Warfarin</strong></div>
+          <p>Scan an aspirin label with Warfarin on the shelf. Pharos resolves to acetylsalicylic acid, finds the documented Major interaction, cites DDInter, and explains the bleeding risk.</p>
+        </div>
+        <div class="card">
+          <div class="scan-row" style="margin-bottom:10px"><span class="severity abstain">Abstain</span><strong>Paracetamol</strong></div>
+          <p>Scan a paracetamol label. The name doesn't resolve to the dataset, so Pharos abstains — "can't verify this one" — instead of inventing an answer.</p>
+        </div>
+        <div class="card">
+          <div class="ico">✈️</div><h3>Airplane mode</h3>
+          <p>Toggle airplane mode after the one-time model download, then scan again — it still works end-to-end, with a zero-traffic network capture to prove it.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><p class="eyebrow">And the ceiling</p><h2>The mesh moment</h2></div>
+      <p>The walkthrough also shows the mesh tier: with a nearby anchor running MedPsy-4B, the phone delegates the explanation and the answer streams back from the bigger model — then the anchor is taken offline to show the graceful fallback to the on-device model.</p>
+      <div class="btn-row"><a class="btn btn-primary" href="tech.html">Reproduce the results →</a><a class="btn btn-ghost" href="mesh.html">How the mesh works</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap cols">
+      <div><a class="brand" href="index.html"><span class="dot"></span> Pharos</a><p style="margin:10px 0 0; max-width:34ch">Private medical AI that works alone, and gets stronger together.</p></div>
+      <div class="links"><a href="how-it-works.html">How it works</a><a href="mesh.html">Mesh</a><a href="demo.html">Demo</a><a href="tech.html">Tech</a><a href="safety.html">Safety</a></div>
+    </div>
+    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Educational information only, not medical advice · Interaction data: DDInter 2.0 (CC BY-NC 4.0)</div>
+  </footer>
+  <script src="assets/app.js"></script>
+</body>
+</html>

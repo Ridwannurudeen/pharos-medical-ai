@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>The mesh tier — Pharos</title>
+  <meta name="description" content="When a capable device is nearby, Pharos delegates the explanation to a larger MedPsy-4B over a peer-to-peer Holepunch DHT — OCR and grounding stay on the phone. Proven across two physical machines." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav wrap">
+      <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="demo.html">Demo</a>
+        <a href="tech.html">Tech</a>
+        <a href="safety.html">Safety</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap" style="padding-bottom:32px">
+      <p class="eyebrow">The mesh tier</p>
+      <h1>A bigger brain, <span class="mint">when one is nearby.</span></h1>
+      <p class="lede">The solo tier is the floor — it always works on one phone. The mesh tier is the ceiling: when a capable anchor device is reachable, the phone hands the explanation step to a larger MedPsy-4B running there, while OCR and the DDInter lookup stay local.</p>
+    </section>
+
+    <section class="wrap" style="padding-top:8px">
+      <div class="grid grid-2">
+        <div class="card"><div class="ico">📱</div><h3>The phone (consumer)</h3><p>Runs OCR + DDInter grounding locally and holds a small on-device MedPsy for the solo path. For a hard case it opens a direct peer connection to the anchor by public key and delegates the explanation.</p></div>
+        <div class="card"><div class="ico">🖥️</div><h3>The anchor (provider)</h3><p>A nearby laptop/desktop runs the larger MedPsy-4B and announces itself on the DHT. It performs the delegated explanation and streams the answer back to the phone.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><p class="eyebrow">Proven, not theoretical</p><h2>Two physical machines, real delegation</h2></div>
+      <p>We ran it for real: an anchor on one machine loaded MedPsy-4B and started a provider; a separate consumer machine connected over the Holepunch DHT and delegated a query with local fallback disabled (so a remote failure couldn't be masked). The answer was generated <strong>on the anchor</strong> and streamed back.</p>
+      <div class="code">consumer → 🍺 peer connection opened (cross-device, over DHT)
+provider → delegated completion runs on MedPsy-4B
+consumer → GATE A: response received from PROVIDER ✓  (TTFT ~6s)</div>
+      <p style="margin-top:14px">Because the heavy model runs on the anchor, the phone gets a larger model's answer without holding it — the win is <strong>capability</strong> (4B &gt; on-device 1.7B), shared over your own devices.</p>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head"><p class="eyebrow">Honest about the boundaries</p><h2>What the mesh is — and isn't</h2></div>
+      <div class="grid grid-3">
+        <div class="card"><div class="ico">🔁</div><h3>Graceful fallback</h3><p>If the anchor is unreachable, Pharos runs the explanation on the phone's own model. Resilience is handled at the device level — no silent failures.</p></div>
+        <div class="card"><div class="ico">📡</div><h3>Local-network tier</h3><p>Peer discovery uses the Holepunch DHT, which bootstraps over the internet. So the <em>mesh</em> tier is the connected story; the <em>solo</em> tier is the airplane-mode one. We don't claim offline for the mesh.</p></div>
+        <div class="card"><div class="ico">🧭</div><h3>Delegation, not magic</h3><p>The SDK supports delegating inference to a peer; it does not do peer-to-peer model <em>pulling</em> or mid-stream failover. We build only on what the SDK actually guarantees.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="btn-row"><a class="btn btn-primary" href="demo.html">Watch it in action →</a><a class="btn btn-ghost" href="tech.html">Reproduce it</a></div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap cols">
+      <div><a class="brand" href="index.html"><span class="dot"></span> Pharos</a><p style="margin:10px 0 0; max-width:34ch">Private medical AI that works alone, and gets stronger together.</p></div>
+      <div class="links"><a href="how-it-works.html">How it works</a><a href="mesh.html">Mesh</a><a href="demo.html">Demo</a><a href="tech.html">Tech</a><a href="safety.html">Safety</a></div>
+    </div>
+    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Educational information only, not medical advice · Interaction data: DDInter 2.0 (CC BY-NC 4.0)</div>
+  </footer>
+  <script src="assets/app.js"></script>
+</body>
+</html>
