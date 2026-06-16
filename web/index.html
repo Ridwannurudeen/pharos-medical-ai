@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Pharos — private, on-device medication-safety AI</title>
+  <meta name="description" content="Pharos reads your medication, explains it, and catches dangerous interactions — fully on-device. Nearby devices form a peer-to-peer mesh so harder cases reach a bigger model. Built on Tether's QVAC SDK." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="assets/style.css" />
+</head>
+<body>
+  <header class="site-header">
+    <nav class="nav wrap">
+      <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+      <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
+      <div class="nav-links">
+        <a href="index.html">Home</a>
+        <a href="how-it-works.html">How it works</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="demo.html">Demo</a>
+        <a href="tech.html">Tech</a>
+        <a href="safety.html">Safety</a>
+      </div>
+    </nav>
+  </header>
+
+  <main>
+    <section class="hero wrap">
+      <p class="eyebrow">On-device medical AI · QVAC Hackathon</p>
+      <h1>Works alone. <span class="mint">Stronger together.</span></h1>
+      <p class="lede">Pharos reads a medication label, normalizes it to its generic name, checks it against your saved shelf, and explains the risk in plain language — entirely on your phone. When a capable device is nearby, harder cases are delegated to a bigger model over a private peer-to-peer mesh.</p>
+      <div class="pills">
+        <span class="tag ok">Fully on-device</span>
+        <span class="tag">Offline after first launch</span>
+        <span class="tag">Grounded in DDInter 2.0</span>
+        <span class="tag">Built on Tether QVAC</span>
+      </div>
+      <div class="btn-row">
+        <a class="btn btn-primary" href="how-it-works.html">See how it works →</a>
+        <a class="btn btn-ghost" href="demo.html">Watch the demo</a>
+      </div>
+
+      <div class="hero-card" aria-hidden="true">
+        <div class="bar"><span></span><span></span><span></span><span class="label">pharos · scan result</span></div>
+        <div class="scan">
+          <div class="scan-row">
+            <span class="severity major">Major</span>
+            <strong>Acetylsalicylic acid + Warfarin</strong>
+          </div>
+          <div class="explain">Taking aspirin with warfarin can raise the risk of serious bleeding. Don't change either medicine on your own — confirm with your pharmacist.</div>
+          <div class="cite">Source: DDInter 2.0 · DDInter20 / DDInter1951 · educational information, not medical advice</div>
+          <div class="meta">on-device · OCR 0.4s · explanation streamed locally</div>
+        </div>
+      </div>
+      <p class="disclaimer" style="margin-top:18px">⚕️ Educational information only — Pharos surfaces <em>documented</em> interactions to help you talk to a professional. It does not diagnose, prescribe, or recommend treatment.</p>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">One product, two tiers</p>
+        <h2>The floor is offline. The ceiling is a mesh.</h2>
+      </div>
+      <div class="grid grid-2">
+        <div class="card">
+          <div class="ico">🟢</div>
+          <h3>Solo tier — any one phone</h3>
+          <p>Camera → on-device OCR → generic-name normalization → DDInter interaction lookup → an on-device MedPsy model explains the result. No account, no cloud. After a one-time model download it runs in airplane mode, provable with a zero-traffic network capture.</p>
+        </div>
+        <div class="card">
+          <div class="ico">🔵</div>
+          <h3>Mesh tier — stronger together</h3>
+          <p>When a nearby anchor is present, the explanation is delegated over a Holepunch DHT to a larger MedPsy-4B running on that device — OCR and the interaction lookup stay on the phone. If the anchor is unreachable, it falls back to the on-device model.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Safe by construction</p>
+        <h2>It retrieves facts — it doesn't invent them.</h2>
+      </div>
+      <div class="grid grid-3">
+        <div class="card"><div class="ico">📚</div><h3>Retrieve, then explain</h3><p>Interactions come from the DDInter 2.0 dataset, not the model. The model only explains a fact that was already retrieved and cited.</p></div>
+        <div class="card"><div class="ico">🛑</div><h3>Abstains when unsure</h3><p>If a drug can't be resolved to the dataset, Pharos says so rather than guessing. Unknown ≠ safe; no-match ≠ safe.</p></div>
+        <div class="card"><div class="ico">🔒</div><h3>Your data stays yours</h3><p>The medication shelf is stored in the device keystore. Nothing about your medications leaves your phone.</p></div>
+      </div>
+    </section>
+
+    <section class="wrap">
+      <div class="section-head">
+        <p class="eyebrow">Verified, not asserted</p>
+        <h2>What's actually been proven</h2>
+      </div>
+      <ul class="facts">
+        <li>The grounded pipeline (resolve → lookup → abstain → audit) passes a 38-check deterministic suite.</li>
+        <li>The real engine runs on Tether QVAC 0.12.2: live OCR → DDInter <strong>Major</strong>, plus abstain and no-fabrication, validated on real inference.</li>
+        <li>The mesh tier is proven across two physical machines: a phone-class consumer delegated to a 4B anchor over the DHT and received the answer from the anchor.</li>
+        <li>No remote API calls for inference — all OCR and MedPsy run locally.</li>
+      </ul>
+      <div class="btn-row" style="margin-top:26px">
+        <a class="btn btn-primary" href="tech.html">See the reproducibility →</a>
+        <a class="btn btn-ghost" href="safety.html">Safety &amp; data</a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap cols">
+      <div>
+        <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+        <p style="margin:10px 0 0; max-width:34ch">Private medical AI that works alone, and gets stronger together. Built for the QVAC Hackathon on Tether's QVAC SDK.</p>
+      </div>
+      <div class="links">
+        <a href="how-it-works.html">How it works</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="demo.html">Demo</a>
+        <a href="tech.html">Tech</a>
+        <a href="safety.html">Safety</a>
+      </div>
+    </div>
+    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Educational information only, not medical advice · Interaction data: DDInter 2.0 (CC BY-NC 4.0)</div>
+  </footer>
+  <script src="assets/app.js"></script>
+</body>
+</html>
