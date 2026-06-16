@@ -49,10 +49,14 @@ codegen TurboModule); on SDK 54 it's the default, but set it explicitly via expo
 ## 3. Android toolchain (install once)
 - **JDK 17** (Temurin/Android Studio JBR). Set `JAVA_HOME`.
 - **Android SDK**: platform-tools, **platforms;android-36** + build-tools;36.0.0 (RN 0.81 compileSdk 36).
-- **NDK `27.0.12077973`** — bare-kit pins this exact NDK; `:react-native-bare-kit` fails to configure
-  without it (`[CXX1101] NDK … did not have a source.properties file` = it's missing/corrupt — install it).
-  Install: `sdkmanager "ndk;27.0.12077973" "platforms;android-36" "build-tools;36.0.0"`.
-  (Do NOT pipe sdkmanager through `| tail` — a broken pipe masks the real exit code and you get a 1 KB stub.)
+- **TWO NDKs are required** (verified against the successful build):
+  - **`29.0.14206865`** — the QVAC expo-plugin pins this as the app's root `ndkVersion` (RN/Expo modules build with it).
+  - **`27.0.12077973`** — `react-native-bare-kit` pins this for its own module; `:react-native-bare-kit` fails to configure without it (`[CXX1101] NDK … did not have a source.properties file`).
+  Install everything in one go:
+  ```bash
+  sdkmanager "platform-tools" "platforms;android-36" "build-tools;36.0.0" "ndk;29.0.14206865" "ndk;27.0.12077973"
+  ```
+  (Do NOT pipe sdkmanager through `| tail` — a broken pipe masks the real exit code and you get a 1 KB stub instead of the NDK; verify each `ndk/<ver>/source.properties` exists afterward.)
 
 ## 4. Build
 ```bash
