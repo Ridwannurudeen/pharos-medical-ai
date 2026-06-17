@@ -21,6 +21,7 @@ export { loadEngines, scanPipeline } from "./real";
 export {
   mockScenarios,
   __setMockScenario,
+  scanPipeline as scanMockPipeline,
   audit,
   auditLines,
   ocrLabel,

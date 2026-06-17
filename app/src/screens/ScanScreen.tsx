@@ -1,11 +1,23 @@
 import type { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { CameraView, useCameraPermissions } from "expo-camera";
 import { useCallback, useRef, useState } from "react";
-import { ActivityIndicator, Pressable, StyleSheet, Text, View } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 import { DisclaimerBanner } from "../components/DisclaimerBanner";
-import { __setMockScenario, scanPipeline, type ScanResult, type ScenarioName } from "../engine";
+import {
+  __setMockScenario,
+  scanMockPipeline,
+  scanPipeline,
+  type ScanResult,
+  type ScenarioName,
+} from "../engine";
 import type { MeshStatus, ResultNotice } from "../mesh";
 import type { ScanStackParamList } from "../navigation/types";
 import { useShelf } from "../store/shelf";
@@ -23,6 +35,7 @@ type DemoScenarioName =
 type RunOptions = {
   meshStatus?: MeshStatus;
   notice?: ResultNotice;
+  pipeline?: "real" | "mock";
 };
 
 const SCENARIOS: {
@@ -67,13 +80,19 @@ const SCENARIOS: {
 ];
 
 function analysisCopy(options?: RunOptions): string {
-  if (options?.meshStatus === "delegating") return "Analyzing on a larger model nearby...";
-  if (options?.meshStatus === "fell-back") return "Checking the nearby anchor, then falling back if needed...";
-  if (options?.notice === "ocr-fail") return "Checking whether the label is readable...";
+  if (options?.meshStatus === "delegating")
+    return "Analyzing on a larger model nearby...";
+  if (options?.meshStatus === "fell-back")
+    return "Checking the nearby anchor, then falling back if needed...";
+  if (options?.notice === "ocr-fail")
+    return "Checking whether the label is readable...";
   return "Analyzing on-device...";
 }
 
-function shapeDemoResult(result: ScanResult, notice?: ResultNotice): ScanResult {
+function shapeDemoResult(
+  result: ScanResult,
+  notice?: ResultNotice,
+): ScanResult {
   if (notice === "ocr-fail") {
     return {
       ...result,
@@ -112,20 +131,46 @@ export function ScanScreen({ navigation }: Props) {
   const cameraRef = useRef<CameraView>(null);
   const [analyzing, setAnalyzing] = useState(false);
   const [analyzingText, setAnalyzingText] = useState(analysisCopy());
+  const [cameraReady, setCameraReady] = useState(false);
+  const [cameraError, setCameraError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<string | null>(null);
   const shelf = useShelf((s) => s.items);
 
   const runScan = useCallback(
     async (image: string, options?: RunOptions) => {
       if (analyzing) return;
+      setScanError(null);
       setAnalyzingText(analysisCopy(options));
       setAnalyzing(true);
       try {
-        const result = shapeDemoResult(await scanPipeline(image, shelf), options?.notice);
+        console.log(`[Pharos] ${options?.pipeline ?? "real"} scan started`, {
+          image,
+        });
+        await new Promise<void>((resolve) =>
+          requestAnimationFrame(() => resolve()),
+        );
+        const pipeline =
+          options?.pipeline === "mock" ? scanMockPipeline : scanPipeline;
+        const result = shapeDemoResult(
+          await pipeline(image, shelf),
+          options?.notice,
+        );
+        console.log(`[Pharos] ${options?.pipeline ?? "real"} scan finished`, {
+          abstained: result.abstained,
+          interactions: result.interactions.length,
+        });
         navigation.navigate("Result", {
           result,
-          meshStatus: options?.meshStatus ?? (result.delegated ? "delegating" : "on-device"),
+          meshStatus:
+            options?.meshStatus ??
+            (result.delegated ? "delegating" : "on-device"),
           notice: options?.notice,
         });
+      } catch (error) {
+        console.error("[Pharos] scan failed", error);
+        setScanError(
+          "Scan failed before a result. Check adb logcat for the Pharos error line.",
+        );
       } finally {
         setAnalyzing(false);
       }
@@ -134,17 +179,56 @@ export function ScanScreen({ navigation }: Props) {
   );
 
   const capture = useCallback(async () => {
-    const photo = await cameraRef.current?.takePictureAsync({
-      quality: 0.5,
-      skipProcessing: true,
-    });
-    await runScan(photo?.uri ?? "camera://capture");
-  }, [runScan]);
+    if (analyzing) return;
+    setScanError(null);
+    setAnalyzingText("Capturing label...");
+    setAnalyzing(true);
+    let timeout: ReturnType<typeof setTimeout> | undefined;
+    try {
+      console.log("[Pharos] capture pressed", { cameraReady });
+      await new Promise<void>((resolve) =>
+        requestAnimationFrame(() => resolve()),
+      );
+      if (!cameraReady || !cameraRef.current) {
+        throw new Error("camera is not ready");
+      }
+      const photo = await Promise.race([
+        cameraRef.current.takePictureAsync({
+          quality: 0.7,
+        }),
+        new Promise<never>((_, reject) => {
+          timeout = setTimeout(
+            () => reject(new Error("camera capture timed out")),
+            10000,
+          );
+        }),
+      ]);
+      if (!photo?.uri) throw new Error("camera did not return a photo URI");
+      console.log("[Pharos] capture saved", {
+        uri: photo.uri,
+        width: photo.width,
+        height: photo.height,
+      });
+      setAnalyzing(false);
+      await runScan(photo.uri);
+    } catch (error) {
+      console.error("[Pharos] capture failed", error);
+      setScanError(
+        "Camera capture failed before analysis. Check adb logcat for the Pharos error line.",
+      );
+      setAnalyzing(false);
+    } finally {
+      if (timeout) clearTimeout(timeout);
+    }
+  }, [analyzing, cameraReady, runScan]);
 
   const runScenario = useCallback(
     (scenario: (typeof SCENARIOS)[number]) => {
       __setMockScenario(scenario.engineScenario);
-      void runScan(`mock://${scenario.name}`, scenario.options);
+      void runScan(`mock://${scenario.name}`, {
+        ...scenario.options,
+        pipeline: "mock",
+      });
     },
     [runScan],
   );
@@ -166,12 +250,27 @@ export function ScanScreen({ navigation }: Props) {
 
       <View style={styles.cameraWrap}>
         {permission.granted ? (
-          <CameraView ref={cameraRef} style={StyleSheet.absoluteFill} facing="back" />
+          <CameraView
+            ref={cameraRef}
+            style={StyleSheet.absoluteFill}
+            facing="back"
+            onCameraReady={() => {
+              console.log("[Pharos] camera ready");
+              setCameraError(null);
+              setCameraReady(true);
+            }}
+            onMountError={(event) => {
+              console.error("[Pharos] camera mount failed", event.message);
+              setCameraReady(false);
+              setCameraError(event.message);
+            }}
+          />
         ) : (
           <View style={styles.permission}>
             <Text style={styles.permTitle}>Camera access</Text>
             <Text style={styles.permBody}>
-              Pharos reads a medication label on-device. The photo never leaves your phone.
+              Pharos reads a medication label on-device. The photo never leaves
+              your phone.
             </Text>
             <Pressable
               accessibilityRole="button"
@@ -200,19 +299,34 @@ export function ScanScreen({ navigation }: Props) {
           accessibilityHint="Takes a medication label photo and analyzes it on this device."
           accessibilityLabel="Capture medication label"
           accessibilityRole="button"
-          accessibilityState={{ disabled: !permission.granted || analyzing }}
-          style={[styles.shutter, (!permission.granted || analyzing) && styles.shutterDisabled]}
+          accessibilityState={{
+            disabled: !permission.granted || !cameraReady || analyzing,
+          }}
+          style={[
+            styles.shutter,
+            (!permission.granted || !cameraReady || analyzing) &&
+              styles.shutterDisabled,
+          ]}
           onPress={capture}
-          disabled={!permission.granted || analyzing}
+          disabled={!permission.granted || !cameraReady || analyzing}
         >
           <View style={styles.shutterInner} />
         </Pressable>
-        <Text style={styles.hint}>Point at a medication label and capture</Text>
+        <Text style={styles.hint}>
+          {cameraReady
+            ? "Point at a medication label and capture"
+            : "Camera starting..."}
+        </Text>
+        {cameraError || scanError ? (
+          <View style={styles.scanError}>
+            <Text style={styles.scanErrorText}>{cameraError ?? scanError}</Text>
+          </View>
+        ) : null}
         {shelf.length === 0 ? (
           <View style={styles.emptyShelf}>
             <Text style={styles.emptyShelfText}>
-              Shelf is empty. Scans can identify a label, but interaction checks need saved
-              medications.
+              Shelf is empty. Scans can identify a label, but interaction checks
+              need saved medications.
             </Text>
           </View>
         ) : null}
@@ -242,9 +356,23 @@ export function ScanScreen({ navigation }: Props) {
 
 const styles = StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.bg },
-  center: { flex: 1, alignItems: "center", justifyContent: "center", backgroundColor: colors.bg },
-  headerWrap: { paddingHorizontal: spacing.lg, paddingBottom: spacing.md, gap: spacing.md },
-  brand: { fontSize: font.h1, fontWeight: "900", color: colors.ink, letterSpacing: -0.5 },
+  center: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bg,
+  },
+  headerWrap: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.md,
+    gap: spacing.md,
+  },
+  brand: {
+    fontSize: font.h1,
+    fontWeight: "900",
+    color: colors.ink,
+    letterSpacing: -0.5,
+  },
   cameraWrap: {
     flex: 1,
     marginHorizontal: spacing.lg,
@@ -256,7 +384,12 @@ const styles = StyleSheet.create({
   },
   permission: { padding: spacing.xl, alignItems: "center", gap: spacing.sm },
   permTitle: { color: "#fff", fontSize: font.h3, fontWeight: "800" },
-  permBody: { color: "#D7E0DB", fontSize: font.small, textAlign: "center", lineHeight: 19 },
+  permBody: {
+    color: "#D7E0DB",
+    fontSize: font.small,
+    textAlign: "center",
+    lineHeight: 19,
+  },
   permBtn: {
     marginTop: spacing.sm,
     backgroundColor: colors.accent,
@@ -272,7 +405,13 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.7)",
     borderRadius: radius.md,
   },
-  analyzing: { ...StyleSheet.absoluteFillObject, alignItems: "center", justifyContent: "center", backgroundColor: "rgba(11,20,17,0.55)", gap: spacing.sm },
+  analyzing: {
+    ...StyleSheet.absoluteFillObject,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(11,20,17,0.55)",
+    gap: spacing.sm,
+  },
   analyzingText: { color: "#fff", fontWeight: "700" },
   controls: { padding: spacing.lg, alignItems: "center", gap: spacing.sm },
   shutter: {
@@ -285,8 +424,28 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   shutterDisabled: { opacity: 0.4 },
-  shutterInner: { width: 54, height: 54, borderRadius: radius.pill, backgroundColor: colors.accent },
+  shutterInner: {
+    width: 54,
+    height: 54,
+    borderRadius: radius.pill,
+    backgroundColor: colors.accent,
+  },
   hint: { color: colors.inkSoft, fontSize: font.small },
+  scanError: {
+    backgroundColor: colors.warnBg,
+    borderColor: "#F0C9BD",
+    borderRadius: radius.md,
+    borderWidth: 1,
+    marginTop: spacing.xs,
+    padding: spacing.md,
+    width: "100%",
+  },
+  scanErrorText: {
+    color: colors.danger,
+    fontSize: font.small,
+    lineHeight: 18,
+    textAlign: "center",
+  },
   emptyShelf: {
     backgroundColor: colors.warnBg,
     borderColor: "#F0C9BD",
@@ -296,10 +455,31 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     width: "100%",
   },
-  emptyShelfText: { color: colors.danger, fontSize: font.small, lineHeight: 18, textAlign: "center" },
-  devStrip: { marginTop: spacing.sm, width: "100%", gap: spacing.xs, alignItems: "center" },
-  devLabel: { color: colors.inkFaint, fontSize: font.tiny, fontWeight: "700", textTransform: "uppercase", letterSpacing: 0.5 },
-  devRow: { flexDirection: "row", flexWrap: "wrap", gap: spacing.sm, justifyContent: "center" },
+  emptyShelfText: {
+    color: colors.danger,
+    fontSize: font.small,
+    lineHeight: 18,
+    textAlign: "center",
+  },
+  devStrip: {
+    marginTop: spacing.sm,
+    width: "100%",
+    gap: spacing.xs,
+    alignItems: "center",
+  },
+  devLabel: {
+    color: colors.inkFaint,
+    fontSize: font.tiny,
+    fontWeight: "700",
+    textTransform: "uppercase",
+    letterSpacing: 0.5,
+  },
+  devRow: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+    justifyContent: "center",
+  },
   devBtn: {
     backgroundColor: colors.surface,
     borderColor: colors.line,
