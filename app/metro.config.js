@@ -26,16 +26,14 @@ config.resolver.unstable_conditionNames = ["require", "import", "react-native"];
 const QVAC_MARKER = path.join("node_modules", "@qvac", "sdk");
 const APP_QVAC = path.join(projectRoot, "node_modules", "@qvac", "sdk");
 config.resolver.resolveRequest = (context, moduleName, platform) => {
-  // Pin @qvac/sdk to the app-local copy (matches the compiled native libs). The real engine is
-  // imported from the repo-root compiled core, which would otherwise resolve @qvac/sdk (and its
-  // transitive `react-native`) against the repo-root tree and pull in a duplicate RN.
-  if (moduleName === "@qvac/sdk" || moduleName.startsWith("@qvac/sdk/")) {
-    const sub = moduleName.slice("@qvac/sdk".length);
-    return context.resolveRequest(
-      context,
-      sub ? path.join(APP_QVAC, sub) : APP_QVAC,
-      platform,
-    );
+  // Pin ONLY the bare `@qvac/sdk` specifier (the repo-root compiled engine's import) to the
+  // app-local copy, so its transitive `react-native` resolves app-local (not the repo-root tree).
+  // Do NOT redirect `@qvac/sdk/<subpath>` — those MUST resolve through the package `exports` map
+  // (e.g. "@qvac/sdk/worker.mobile.bundle" -> dist/worker.mobile.bundle.js so Metro inlines the
+  // 10.8 MB mobile worker bundle). Rewriting subpaths to an absolute path bypasses `exports` and
+  // breaks the worker-bundle load at runtime (RPC_CONNECTION_FAILED / "Cannot find module").
+  if (moduleName === "@qvac/sdk") {
+    return context.resolveRequest(context, APP_QVAC, platform);
   }
   if (moduleName.startsWith("#")) {
     const origin = context.originModulePath || "";
