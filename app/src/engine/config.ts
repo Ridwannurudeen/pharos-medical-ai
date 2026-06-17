@@ -9,9 +9,11 @@ import * as FileSystem from "expo-file-system/legacy";
 /** Filename opened by `SQLite.openDatabaseSync(DB_NAME)`. expo-sqlite looks in <documentDir>/SQLite/. */
 export const DB_NAME = "pharos.db";
 
-// MedPsy-1.7B GGUF (~1.28 GB). QVAC loadModel() takes a local path. Downloaded once on first launch
-// (online) into <documentDir>models/ by ensureModel(); offline on every run after.
-export const MEDPSY_MODEL_SRC = `${FileSystem.documentDirectory}models/medpsy-1.7b-q4_k_m-imat.gguf`;
+// MedPsy-1.7B GGUF (~1.28 GB). Expo FileSystem APIs take a file:// URI, while QVAC loadModel()
+// takes a raw local filesystem path. Downloaded once on first launch (online) into
+// <documentDir>models/ by ensureModel(); offline on every run after.
+export const MEDPSY_MODEL_URI = `${FileSystem.documentDirectory}models/medpsy-1.7b-q4_k_m-imat.gguf`;
+export const MEDPSY_MODEL_SRC = MEDPSY_MODEL_URI.replace(/^file:\/\//, "");
 export const MEDPSY_MODEL_URL =
   "https://huggingface.co/qvac/MedPsy-1.7B-GGUF/resolve/main/medpsy-1.7b-q4_k_m-imat.gguf?download=true";
 // Guard: the real file is ~1.28 GB. A smaller file on disk = a truncated/interrupted download,
@@ -55,13 +57,13 @@ export async function ensureDatabase(): Promise<void> {
 }
 
 /**
- * Ensure the MedPsy-1.7B GGUF is on disk at MEDPSY_MODEL_SRC, downloading it once on first launch
+ * Ensure the MedPsy-1.7B GGUF is on disk at MEDPSY_MODEL_URI, downloading it once on first launch
  * with progress logging. Idempotent — skips if a complete copy is already present.
  */
 export async function ensureModel(
   onProgress?: (pct: number) => void,
 ): Promise<void> {
-  const info = await FileSystem.getInfoAsync(MEDPSY_MODEL_SRC);
+  const info = await FileSystem.getInfoAsync(MEDPSY_MODEL_URI);
   if (info.exists && (info.size ?? 0) >= MEDPSY_MIN_BYTES) {
     console.log(
       `[Pharos] MedPsy model present (${info.size} bytes), skipping download`,
@@ -72,15 +74,15 @@ export async function ensureModel(
     console.log(
       `[Pharos] MedPsy model incomplete (${info.size} bytes) — re-downloading`,
     );
-    await FileSystem.deleteAsync(MEDPSY_MODEL_SRC, { idempotent: true });
+    await FileSystem.deleteAsync(MEDPSY_MODEL_URI, { idempotent: true });
   }
-  const dir = MEDPSY_MODEL_SRC.slice(0, MEDPSY_MODEL_SRC.lastIndexOf("/"));
+  const dir = MEDPSY_MODEL_URI.slice(0, MEDPSY_MODEL_URI.lastIndexOf("/"));
   await FileSystem.makeDirectoryAsync(dir, { intermediates: true });
   console.log("[Pharos] downloading MedPsy model (~1.28 GB)…");
   let lastPct = -1;
   const dl = FileSystem.createDownloadResumable(
     MEDPSY_MODEL_URL,
-    MEDPSY_MODEL_SRC,
+    MEDPSY_MODEL_URI,
     {},
     (p) => {
       if (!p.totalBytesExpectedToWrite) return;
@@ -97,7 +99,7 @@ export async function ensureModel(
   const res = await dl.downloadAsync();
   if (!res || res.status !== 200)
     throw new Error(`MedPsy model download failed: HTTP ${res?.status}`);
-  const after = await FileSystem.getInfoAsync(MEDPSY_MODEL_SRC);
+  const after = await FileSystem.getInfoAsync(MEDPSY_MODEL_URI);
   console.log(
     `[Pharos] MedPsy model downloaded: ${after.exists ? after.size : 0} bytes`,
   );
