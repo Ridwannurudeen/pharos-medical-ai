@@ -126,6 +126,10 @@ function shapeDemoResult(
   return result;
 }
 
+function qvacImageSrc(image: string, pipeline?: RunOptions["pipeline"]): string {
+  return pipeline === "mock" ? image : image.replace(/^file:\/\//, "");
+}
+
 export function ScanScreen({ navigation }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const cameraRef = useRef<CameraView>(null);
@@ -143,8 +147,10 @@ export function ScanScreen({ navigation }: Props) {
       setAnalyzingText(analysisCopy(options));
       setAnalyzing(true);
       try {
+        const imageSrc = qvacImageSrc(image, options?.pipeline);
         console.log(`[Pharos] ${options?.pipeline ?? "real"} scan started`, {
           image,
+          imageSrc,
         });
         await new Promise<void>((resolve) =>
           requestAnimationFrame(() => resolve()),
@@ -152,7 +158,7 @@ export function ScanScreen({ navigation }: Props) {
         const pipeline =
           options?.pipeline === "mock" ? scanMockPipeline : scanPipeline;
         const result = shapeDemoResult(
-          await pipeline(image, shelf),
+          await pipeline(imageSrc, shelf),
           options?.notice,
         );
         console.log(`[Pharos] ${options?.pipeline ?? "real"} scan finished`, {
