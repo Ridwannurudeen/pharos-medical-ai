@@ -126,7 +126,10 @@ function shapeDemoResult(
   return result;
 }
 
-function qvacImageSrc(image: string, pipeline?: RunOptions["pipeline"]): string {
+function qvacImageSrc(
+  image: string,
+  pipeline?: RunOptions["pipeline"],
+): string {
   return pipeline === "mock" ? image : image.replace(/^file:\/\//, "");
 }
 
