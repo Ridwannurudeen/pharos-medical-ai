@@ -23,6 +23,9 @@ import type { Engine } from "./pipeline.ts";
 import type { Grounding } from "./grounding.ts";
 import { createNormalizer } from "./normalize.ts";
 
+const EXPLAIN_TIMEOUT_MS = 30_000;
+const EXPLAIN_TIMEOUT = Symbol("explain-timeout");
+
 // MedPsy is a reasoning model: it emits a <think>...</think> chain-of-thought before its answer.
 // Return only the content after the (final) </think>; while a think block is still open, return "".
 // Non-reasoning output (no tags) passes through unchanged.
@@ -30,6 +33,40 @@ function stripThinking(s: string): string {
   let out = s.replace(/<think>[\s\S]*?<\/think>/g, "");
   const open = out.indexOf("<think>");
   return open === -1 ? out : out.slice(0, open);
+}
+
+function groundedFallbackExplanation(
+  interactions: {
+    drugA: string;
+    drugB: string;
+    severity: string;
+  }[],
+): string {
+  if (!interactions.length) {
+    return "No documented interaction was found in DDInter 2.0 between this medication and the medicines on your shelf. This is not a guarantee of safety, so confirm with a pharmacist.";
+  }
+
+  const facts = interactions
+    .map((ix) => `${ix.drugA} and ${ix.drugB}: ${ix.severity}`)
+    .join("; ");
+  return `DDInter 2.0 documents the following interaction: ${facts}. Treat this as a medication-safety flag and confirm with a pharmacist before combining these medicines.`;
+}
+
+async function nextTokenWithTimeout<T>(
+  iterator: AsyncIterator<T>,
+  timeoutMs: number,
+): Promise<IteratorResult<T> | typeof EXPLAIN_TIMEOUT> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([
+      iterator.next(),
+      new Promise<typeof EXPLAIN_TIMEOUT>((resolve) => {
+        timer = setTimeout(() => resolve(EXPLAIN_TIMEOUT), timeoutMs);
+      }),
+    ]);
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 export interface QvacEngineConfig {
@@ -120,15 +157,44 @@ export async function createQvacEngine(
       });
       let text = "";
       let emitted = 0;
-      for await (const token of run.tokenStream) {
-        text += token;
+      const tokenIterator = run.tokenStream[Symbol.asyncIterator]();
+      const deadline = Date.now() + EXPLAIN_TIMEOUT_MS;
+
+      while (true) {
+        const remaining = deadline - Date.now();
+        if (remaining <= 0) {
+          void Promise.resolve(tokenIterator.return?.()).catch(() => undefined);
+          const fallback = groundedFallbackExplanation(interactions);
+          if (emitted === 0) opts?.onToken?.(fallback);
+          console.warn(
+            `[Pharos] MedPsy explanation timed out after ${EXPLAIN_TIMEOUT_MS}ms; using grounded fallback`,
+          );
+          return { text: fallback };
+        }
+
+        const next = await nextTokenWithTimeout(tokenIterator, remaining);
+        if (next === EXPLAIN_TIMEOUT) {
+          void Promise.resolve(tokenIterator.return?.()).catch(() => undefined);
+          const fallback = groundedFallbackExplanation(interactions);
+          if (emitted === 0) opts?.onToken?.(fallback);
+          console.warn(
+            `[Pharos] MedPsy explanation timed out after ${EXPLAIN_TIMEOUT_MS}ms; using grounded fallback`,
+          );
+          return { text: fallback };
+        }
+        if (next.done) break;
+
+        text += String(next.value ?? "");
         const cleaned = stripThinking(text);
         if (cleaned.length > emitted) {
           opts?.onToken?.(cleaned.slice(emitted));
           emitted = cleaned.length;
         }
       }
-      return { text: stripThinking(text).trim() };
+
+      const cleaned = stripThinking(text).trim();
+      if (cleaned) return { text: cleaned };
+      return { text: groundedFallbackExplanation(interactions) };
     },
 
     async close() {
