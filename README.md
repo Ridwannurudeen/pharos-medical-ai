@@ -19,17 +19,16 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 
 ```
 pharos/
-├─ core/         # engine API + types (+ audit-log writer) — Lead. Mocks shipped; real impls June 1
+├─ core/         # engine API + types, grounded pipeline, audit + resource-log writers, QVAC engine — Lead
 ├─ scripts/      # fetch-data · build-data · verify-data — data pipeline + reproducibility harness
 ├─ data/         # dataset sourcing + the generated pharos.db (gitignored; `npm run data`) — see data/README.md
-├─ app/          # React Native (Expo) phone app — solo tier + mesh consumer      [June 1]
-├─ anchor/       # Node.js laptop "anchor" — mesh provider running MedPsy-4B       [June 1]
-├─ tests/fixtures/ # verified demo label images + expected outputs                 [June 1]
-├─ docs/         # SDK reference, data pipeline, log schemas, lane brief, design notes
+├─ app/          # React Native (Expo SDK 54 / RN 0.81) phone app — solo scanner + mesh consumer
+├─ spike/        # run-validation harnesses (engine, safety) + Gate A mesh provider/consumer scripts
+├─ docs/         # SDK reference, reproducibility, EXPO54-BUILD + device + mesh runbooks, log schemas
 ├─ NOTICE · LICENSE · ROADMAP.md · LAUNCH-CHECKLIST.md
 ```
 
-`app/`, `anchor/`, and `tests/` are written during the judged build period (June 1+). `core/` (mocked), `scripts/`, and the data pipeline were built early as **disclosed prior work**.
+`scripts/` and the data pipeline were built early as **disclosed prior work**; the real engine (`core/`), the phone app (`app/`), and the mesh provider/consumer (`spike/`) are judged build-period work. The mesh anchor currently runs from the `spike/` scripts (a dedicated `anchor/` package is a possible later extraction).
 
 ## Stack (planned)
 
@@ -47,9 +46,11 @@ pharos/
 2. `npm run verify` — assert the grounded chain + abstain + audit + resource log (38 checks).
 3. `npm install` then `npm run typecheck` — type-check `core/` + `scripts/` (install is only needed for this step).
 
-**App + mesh (June 1):**
-4. `npm install @qvac/sdk` (phone dev build + laptop anchor); download the MedPsy GGUFs.
-5. Run the Day-1 spike (`day1-spike.md`) to confirm the P2P + grounded-chain gates before committing the mesh tier.
+**Phone app (Expo SDK 54 / RN 0.81 — requires `@qvac/sdk@0.12.2`):**
+4. Build + run on a device: see [`docs/EXPO54-BUILD.md`](docs/EXPO54-BUILD.md) — the full verified recipe (toolchain incl. NDK 27, the build, every error + fix), plus [`docs/DEVICE-SETUP.md`](docs/DEVICE-SETUP.md) for the on-device camera/scan steps.
+
+**Mesh (optional upside):**
+5. Cross-device Gate A delegation (phone ↔ anchor running MedPsy-4B): see [`docs/MESH-RUNBOOK.md`](docs/MESH-RUNBOOK.md). The delegation mechanism is verified in loopback on `@qvac/sdk@0.12.2`.
 
 ## Reproducibility (required by judges)
 

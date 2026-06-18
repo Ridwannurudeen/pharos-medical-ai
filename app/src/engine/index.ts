@@ -15,13 +15,15 @@ export * from "./contract";
 // `.ts`-specifier resolution is a sure thing before the swap; metro.config.js already watches
 // the repo root. Until that entrypoint lands, this faithful mock stays the default (the Lead
 // confirmed that is the right call).
+// REAL engine (loads OCR + MedPsy on device; see ./real.ts):
+export { loadEngines, scanPipeline } from "./real";
+// demo strip + unused stubs stay on the mock:
 export {
-  scanPipeline,
   mockScenarios,
   __setMockScenario,
+  scanPipeline as scanMockPipeline,
   audit,
   auditLines,
-  loadEngines,
   ocrLabel,
   normalize,
   lookupInteractions,
