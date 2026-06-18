@@ -70,6 +70,11 @@ Full, verified reproduce-the-results guide: **[`docs/REPRODUCIBILITY.md`](docs/R
 Final APK links, evidence checklist, Dolepee-owned proof items, submission-owned documentation work,
 and known limitations are tracked in [`docs/VALIDATION-HANDOFF.md`](docs/VALIDATION-HANDOFF.md).
 
+## Submission package
+
+Judge-facing links, safe claims, limitation wording, and the label-robustness roadmap are tracked in
+[`docs/SUBMISSION-PACKAGE.md`](docs/SUBMISSION-PACKAGE.md).
+
 ## Data & licensing
 
 Interaction warnings are **retrieved** from real datasets (not generated). See [`NOTICE`](NOTICE) for attributions and [`data/README.md`](data/README.md) for sourcing. Note: DDInter is **CC BY-NC 4.0 (non-commercial)** — fine for this non-commercial hackathon entry with attribution, but it constrains commercial reuse.

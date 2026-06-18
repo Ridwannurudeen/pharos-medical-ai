@@ -133,6 +133,8 @@ Pick from, in priority order:
 |---|---|
 | Gate A (P2P/offline pull) fails | Solo tier is the floor — drop Phase 2, reinvest in Phase 4. Decided Day 1, zero sunk cost. |
 | OCR misses foreign brand names | Generic-name matching + abstain gate; narrow demo languages; disclose coverage. |
+| OCR misses noisy real-world packaging | Keep clean-label validation as the claimed path; add brand-to-generic aliases, fuzzy OCR correction, crop/retake guidance, and multi-frame capture before claiming arbitrary packaging coverage. |
+| Fresh install is not fully offline | Frame offline as cached/staged operation: database + OCR assets + MedPsy must be present before airplane-mode scans. |
 | MedPsy invents interactions | Retrieve-then-explain + strict output template; `npm run verify` asserts grounding. |
 | Cold-DHT connect (15–45s) reads as "broken" on camera | Warm the connection before recording; show the warm sub-second path. |
 | Integration drift between lanes | `core/` contract frozen Day 2; B builds on mocks; continuous integration, no big-bang merge. |
