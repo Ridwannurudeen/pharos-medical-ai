@@ -65,6 +65,11 @@ Full, verified reproduce-the-results guide: **[`docs/REPRODUCIBILITY.md`](docs/R
 - **Audit log** (JSONL) and **resource log** (CSV) — schemas in [`docs/audit-log-schema.md`](docs/audit-log-schema.md).
 - **Network capture** proving zero outbound inference traffic during offline runs.
 
+## S25 validation handoff
+
+Final APK links, evidence checklist, Dolepee-owned proof items, submission-owned documentation work,
+and known limitations are tracked in [`docs/VALIDATION-HANDOFF.md`](docs/VALIDATION-HANDOFF.md).
+
 ## Data & licensing
 
 Interaction warnings are **retrieved** from real datasets (not generated). See [`NOTICE`](NOTICE) for attributions and [`data/README.md`](data/README.md) for sourcing. Note: DDInter is **CC BY-NC 4.0 (non-commercial)** — fine for this non-commercial hackathon entry with attribution, but it constrains commercial reuse.
