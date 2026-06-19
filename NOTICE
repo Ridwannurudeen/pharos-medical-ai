@@ -14,8 +14,9 @@ DDInter 2.0 — drug-drug interaction data (interactions + severity)
 
 RxNorm — Current Prescribable Content (drug name normalization → RxCUI)
   Source: U.S. National Library of Medicine (NLM). RxNorm codes/normalized
-  names are U.S. Government work (public domain); the Current Prescribable
-  Content subset is downloadable without a UMLS license.
+  names are U.S. Government work (public domain). The Current Prescribable
+  Content download may require a free UMLS/UTS account; it is not on the
+  critical path for the validated DDInter-name-based submission build.
   https://www.nlm.nih.gov/research/umls/rxnorm/docs/prescribe.html
   NOTE: NLM's RxNav drug-interaction API was discontinued Jan 2, 2024 — NOT used.
 

@@ -42,14 +42,17 @@ pharos/
 ## Setup
 
 **Data + verification (works today — needs only Node ≥24, zero runtime deps):**
+
 1. `npm run data` — fetch DDInter and build `data/pharos.db`.
 2. `npm run verify` — assert the grounded chain + abstain + audit + resource log (38 checks).
 3. `npm install` then `npm run typecheck` — type-check `core/` + `scripts/` (install is only needed for this step).
 
 **Phone app (Expo SDK 54 / RN 0.81 — requires `@qvac/sdk@0.12.2`):**
+
 4. Build + run on a device: see [`docs/EXPO54-BUILD.md`](docs/EXPO54-BUILD.md) — the full verified recipe (toolchain incl. NDK 27, the build, every error + fix), plus [`docs/DEVICE-SETUP.md`](docs/DEVICE-SETUP.md) for the on-device camera/scan steps.
 
 **Mesh (optional upside):**
+
 5. Cross-device Gate A delegation (phone ↔ anchor running MedPsy-4B): see [`docs/MESH-RUNBOOK.md`](docs/MESH-RUNBOOK.md). The delegation mechanism is verified in loopback on `@qvac/sdk@0.12.2`.
 
 ## Reproducibility (required by judges)
@@ -74,6 +77,8 @@ and known limitations are tracked in [`docs/VALIDATION-HANDOFF.md`](docs/VALIDAT
 
 Judge-facing links, safe claims, limitation wording, and the label-robustness roadmap are tracked in
 [`docs/SUBMISSION-PACKAGE.md`](docs/SUBMISSION-PACKAGE.md).
+Project-owned limitation handling is tracked in
+[`docs/PROJECT-LIMITATION-STATUS.md`](docs/PROJECT-LIMITATION-STATUS.md).
 
 ## Data & licensing
 
