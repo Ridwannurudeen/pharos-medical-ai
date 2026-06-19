@@ -25,6 +25,49 @@ import { createNormalizer } from "./normalize.ts";
 
 const EXPLAIN_TIMEOUT_MS = 30_000;
 const EXPLAIN_TIMEOUT = Symbol("explain-timeout");
+const LOW_OCR_TEXT_THRESHOLD = 6;
+
+interface OcrTextBlock {
+  text: string;
+  confidence?: number;
+}
+
+function mergeOcrText(blocks: OcrTextBlock[]): string {
+  const cleaned = blocks
+    .map((block) => ({
+      text: block.text.trim().replace(/\s+/g, " "),
+      confidence: block.confidence,
+    }))
+    .filter((block) => block.text.length > 0);
+
+  const primary = cleaned
+    .filter(
+      (block) =>
+        block.confidence === undefined || typeof block.confidence !== "number" || block.confidence >= 0.35,
+    )
+    .map((block) => block.text)
+    .join(" ")
+    .trim()
+    .replace(/\s+/g, " ");
+
+  if (primary.length >= LOW_OCR_TEXT_THRESHOLD) return primary;
+
+  return cleaned.map((block) => block.text).join(" ").trim().replace(/\s+/g, " ");
+}
+
+async function runOcrWithParagraph(
+  modelId: string,
+  image: string | Uint8Array,
+  paragraph: boolean,
+): Promise<string> {
+  const result = ocr({
+    modelId,
+    image,
+    options: { paragraph },
+  });
+  const blocks = await result.blocks;
+  return mergeOcrText(blocks as OcrTextBlock[]);
+}
 
 // MedPsy is a reasoning model: it emits a <think>...</think> chain-of-thought before its answer.
 // Return only the content after the (final) </think>; while a think block is still open, return "".
@@ -119,16 +162,12 @@ export async function createQvacEngine(
   return {
     async ocr(image) {
       const t0 = Date.now();
-      const result = ocr({
-        modelId: ocrModelId,
-        image,
-        options: { paragraph: false },
-      });
-      const blocks = await result.blocks;
-      const text = blocks
-        .map((b: { text: string }) => b.text)
-        .join(" ")
-        .trim();
+      const fastText = await runOcrWithParagraph(ocrModelId, image, false);
+      let text = fastText;
+      if (text.length < LOW_OCR_TEXT_THRESHOLD) {
+        const paragraphText = await runOcrWithParagraph(ocrModelId, image, true);
+        text = paragraphText || text;
+      }
       return { text, latencyMs: Date.now() - t0 };
     },
 
