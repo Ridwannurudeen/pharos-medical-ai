@@ -147,12 +147,12 @@ storage/runtime measurements. Add a short result note for each item to the evide
 
 Required checks:
 
-- Try at least one additional Android device if available. If none is available, mark broader Android coverage as not tested.
+- Record the S25 Ultra Android version and device details used for validation.
 - Record OCR latency for every label-matrix case and identify the slowest case.
 - Capture the CameraX reset or broken-pipe logs and confirm whether the next scan still works after navigation or relaunch.
 - Record installed APK size and app storage after OCR assets, `pharos.db`, and MedPsy are present.
 - Confirm MedPsy timeout fallback stays grounded in DDInter and does not invent an interaction.
-- Try one difficult-label case from each available category: bad lighting, handwritten text, multi-drug label, non-English label, low-end Android device.
+- Try one difficult-label case from each available S25 category: bad lighting, handwritten text, multi-drug label, or non-English label.
 
 Success criteria:
 
@@ -205,6 +205,7 @@ run:
 - State that DDInter 2.0 and the current synonym layer bound drug coverage.
 - State that there is no live model or DDInter update pipeline yet.
 - Keep fresh-install offline claims tied to Dolepee's offline-boundary proof.
+- Own broader Android coverage beyond Dolepee's S25 Ultra, including any second-device or low-end-device validation.
 
 ## Known limitations
 
@@ -226,12 +227,12 @@ run:
 
 ## Limitation owner matrix
 
-| Limitation | Primary owner | Required handling |
+| Limitation | Owner | Required handling |
 |---|---|---|
 | Final non-debuggable APK smoke proof | Dolepee | Install over current app, preserve staged data, save SHA/install/startup/result proof. |
 | Arbitrary real-world packaging | Dolepee | Run the label matrix; mark clean labels, noisy labels, abstains, false positives, and blockers. |
 | Fresh-install offline boundary | Dolepee | Prove staged offline behavior and document whether fresh install needs pre-airplane-mode asset staging. |
-| One-device validation floor | Dolepee | Try another Android device if available; otherwise mark broader Android coverage as not tested. |
+| One-device validation floor | Project owner | Keep Dolepee's S25 proof as the validation floor and separately own any second-device Android validation. |
 | OCR latency | Dolepee | Record timings for label-matrix cases and call out the slowest reproducible case. |
 | CameraX reset or broken-pipe logs | Dolepee | Capture logcat and confirm whether scan flow recovers after navigation or relaunch. |
 | DDInter and synonym coverage bounds | Project owner | Disclose coverage limits and keep the brand/generic expansion in the roadmap. |
@@ -241,5 +242,5 @@ run:
 | Sideload APK distribution | Project owner | Disclose that this is a hackathon APK, not app-store production distribution. |
 | No deep git-history audit | Project owner | Disclose tracked-file scan scope; do not claim a full secret-history audit. |
 | No clinical or regulatory validation | Project owner | Keep educational-only and non-clinical wording in submission materials. |
-| Difficult labels and low-end devices | Dolepee | Test any available difficult-label/low-end cases and mark unsupported cases honestly. |
+| Difficult labels and low-end devices | Split | Dolepee tests available difficult-label cases on S25; project owner owns second-device and low-end-device validation. |
 | No live model or DDInter update pipeline | Project owner | Disclose static bundled assets and keep update pipeline as future work. |
