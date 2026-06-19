@@ -71,6 +71,75 @@ Confirm these remain observations rather than blockers:
 - CameraX can emit surface reset or broken-pipe logs after navigating away from camera/result screens.
 - Arbitrary noisy packaging can abstain when OCR/normalization cannot identify a known generic.
 
+### 4. Label robustness evidence matrix
+
+Run a controlled S25 label matrix against the final APK. This should test the current boundary between
+the validated clean-label path and noisy real-world packaging.
+
+Use the same staged app state when possible, then capture one folder per case under:
+
+```text
+/home/qdee/pharos-artifacts/label-matrix/
+```
+
+Minimum cases:
+
+- Clean typed `ASPIRIN 325 mg / Acetylsalicylic Acid` with Warfarin already on the shelf.
+- A retail package or bottle label where the generic name is visible.
+- A brand-heavy label where the generic name is small or partially hidden.
+- A glare/clutter/angled label.
+- A clean `PARACETAMOL 500 mg / Acetaminophen` abstain case.
+
+For each case, save:
+
+- Label photo or screenshot used for the scan.
+- Result screenshot.
+- Logcat slice covering capture, OCR, normalization, lookup, and result navigation.
+- Raw OCR text if visible in logs.
+- Matched generic name, interaction count, abstain status, latency, and whether the result was expected.
+
+Success criteria:
+
+- Clean, visible generic labels should still reach the validated path.
+- Noisy or uncertain labels may abstain, but must not invent a drug or interaction.
+- Any crash, stuck spinner, or false positive medical claim is a blocker to document immediately.
+
+### 5. Fresh-install offline boundary proof
+
+Document the exact offline boundary so the submission can stay precise:
+
+- Confirm a staged app with cached OCR assets, bundled `pharos.db`, and staged MedPsy still works in airplane mode.
+- If testing a fresh install, record whether the model/OCR assets are already available or still need staging.
+- Do not present a fresh install as fully offline unless the final evidence proves every required asset is present before airplane mode.
+
+Expected artifact:
+
+```text
+/home/qdee/pharos-artifacts/offline-boundary/summary.md
+```
+
+The summary should state whether the run was staged, fresh install, or install-over-current-app, and
+whether any network access was needed before the successful offline scan.
+
+### 6. Shareable evidence manifest
+
+Create a short manifest that points judges or reviewers to the exact evidence files without requiring
+them to inspect the whole artifact folder.
+
+Expected artifact:
+
+```text
+/home/qdee/pharos-artifacts/MANIFEST.md
+```
+
+Include:
+
+- Final APK filename and SHA256.
+- Device model and Android version.
+- Validated app commit.
+- Paths for the clean-label Major pass, abstain pass, airplane-mode repeat, final APK smoke proof, and label matrix.
+- One-line status for each case: pass, abstain-as-expected, observation, or blocker.
+
 ## Project-owned follow-up
 
 ### 1. Submission framing
