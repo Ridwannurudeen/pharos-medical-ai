@@ -3,74 +3,114 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Safety &amp; data — Pharos</title>
-  <meta name="description" content="Pharos is educational decision-support, not medical advice. It retrieves documented interactions, abstains when unsure, keeps your data on-device, and attributes its sources." />
+  <title>Safety — Pharos</title>
+  <meta name="description" content="Pharos safety model: educational interaction warnings, grounded DDInter retrieval, abstain on uncertainty, and on-device medication shelf privacy." />
+  <link rel="canonical" href="https://pharos.gudman.xyz/safety.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pharos.gudman.xyz/safety.html" />
+  <meta property="og:title" content="Pharos safety model" />
+  <meta property="og:description" content="A medication warning tool that retrieves documented interactions, abstains when unsure, and avoids medical approval claims." />
+  <meta property="og:image" content="https://pharos.gudman.xyz/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pharos safety model" />
+  <meta name="twitter:description" content="Educational medication interaction support with grounded retrieval and abstain behavior." />
+  <meta name="twitter:image" content="https://pharos.gudman.xyz/og.png" />
+  <meta name="theme-color" content="#06120f" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;650;750;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
-    <nav class="nav wrap">
-      <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+    <nav class="nav wrap" aria-label="Primary">
+      <a class="brand" href="index.html"><img src="assets/brand/pharos-mark.svg" alt="" /> Pharos</a>
       <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="how-it-works.html">How it works</a>
-        <a href="mesh.html">Mesh</a>
         <a href="demo.html">Demo</a>
-        <a href="tech.html">Tech</a>
+        <a href="tech.html">Evidence</a>
+        <a href="mesh.html">Mesh</a>
         <a href="safety.html">Safety</a>
+        <a class="nav-cta" href="https://github.com/Ridwannurudeen/pharos-medical-ai/releases/tag/apk-pr30-final">APK</a>
       </div>
     </nav>
   </header>
 
-  <main>
-    <section class="hero wrap" style="padding-bottom:24px">
-      <p class="eyebrow">Safety &amp; data</p>
-      <h1>Decision support — <span class="mint">not a diagnosis.</span></h1>
-      <div class="callout warn" style="margin-top:10px; font-size:1rem">
-        ⚕️ <strong>Educational information only.</strong> Pharos identifies medications and surfaces <em>documented</em> interactions to help you have a better conversation with a professional. It does <strong>not</strong> diagnose, prescribe, recommend treatment, or replace a pharmacist or doctor. Never start, stop, or change a medication based on Pharos. In an emergency, contact your local emergency services.
+  <main id="main">
+    <section class="page-hero">
+      <div class="wrap">
+        <p class="eyebrow">Safety model</p>
+        <h1>Pharos warns. It does not approve.</h1>
+        <p class="lede">The app is educational decision support. It surfaces documented interaction warnings so a user can talk to a pharmacist or clinician. It does not diagnose, prescribe, dose, or tell a user to start or stop medicine.</p>
       </div>
     </section>
 
-    <section class="wrap" style="padding-top:8px">
-      <div class="section-head"><p class="eyebrow">How it stays trustworthy</p><h2>Designed to be wrong safely</h2></div>
-      <div class="grid grid-3">
-        <div class="card"><div class="ico">📚</div><h3>Retrieved, cited facts</h3><p>Interaction severity comes from the DDInter 2.0 dataset and is cited with its source IDs. The model explains that fact; it does not decide it.</p></div>
-        <div class="card"><div class="ico">🛑</div><h3>Abstains over guessing</h3><p>If a medication can't be confidently resolved to the dataset, Pharos says it can't verify it. An unknown or unmatched drug is never presented as "safe."</p></div>
-        <div class="card"><div class="ico">🌍</div><h3>Honest about gaps</h3><p>DDInter is US/English-centric, so some international brand or generic names won't resolve — and Pharos abstains rather than mislead. It is not a complete interaction checker.</p></div>
+    <section>
+      <div class="wrap">
+        <div class="grid grid-3">
+          <div class="card danger"><span class="kicker">Never says</span><h3>“This is safe for you.”</h3><p>No documented interaction found is not a medical clearance. It only means Pharos did not retrieve a matching DDInter pair.</p></div>
+          <div class="card"><span class="kicker">Always says</span><h3>Confirm with a professional</h3><p>Warnings are framed as reasons to speak with a pharmacist or doctor, not as treatment instructions.</p></div>
+          <div class="card amber"><span class="kicker">When unsure</span><h3>Abstain, do not invent</h3><p>If the drug cannot be resolved or the OCR confidence is too low, Pharos refuses to fabricate a conclusion.</p></div>
+        </div>
       </div>
     </section>
 
-    <section class="wrap">
-      <div class="section-head"><p class="eyebrow">Privacy</p><h2>Your medications never leave your phone</h2></div>
-      <div class="grid grid-2">
-        <div class="card"><div class="ico">📷</div><h3>On-device by default</h3><p>OCR, normalization, the interaction lookup, and the explanation all run locally. No label image and no medication data is sent to a server. The solo tier does zero network I/O during a scan.</p></div>
-        <div class="card"><div class="ico">🔒</div><h3>Encrypted shelf</h3><p>Your saved medication list is held in the device's secure keystore. In the mesh tier, only the retrieved interaction fact is delegated for explanation — your shelf and photos stay on the phone.</p></div>
+    <section>
+      <div class="wrap shot-grid">
+        <div class="shot-frame">
+          <img src="assets/proof/s25-warfarin-shelf.webp" alt="Pharos shelf screen with Warfarin saved on-device." />
+        </div>
+        <div class="shot-copy">
+          <p class="eyebrow">Privacy boundary</p>
+          <h2>The shelf belongs to the device.</h2>
+          <ul class="facts">
+            <li>The medication shelf is stored locally on the phone.</li>
+            <li>Inference does not rely on a remote medical API.</li>
+            <li>The app can explain the retrieved fact without exposing medication history to a web service.</li>
+            <li>Mesh delegation, when used, is explicit and bounded to the explanation step.</li>
+          </ul>
+        </div>
       </div>
     </section>
 
-    <section class="wrap">
-      <div class="section-head"><p class="eyebrow">Data &amp; licensing</p><h2>Sources and terms</h2></div>
-      <ul class="facts">
-        <li><strong>DDInter 2.0</strong> — drug-drug interactions and severity. Licensed <strong>CC BY-NC 4.0</strong> (non-commercial, attribution required) — fine for this non-commercial entry, but it constrains commercial reuse.</li>
-        <li><strong>MedPsy</strong> models run on-device via Tether's QVAC SDK; confirm the model card terms for your use.</li>
-        <li>Project <strong>code is Apache-2.0</strong>. Bundled datasets retain their own licenses — see <code>NOTICE</code> in the repository.</li>
-      </ul>
-      <div class="btn-row" style="margin-top:24px">
-        <a class="btn btn-primary" href="how-it-works.html">How it works →</a>
-        <a class="btn btn-ghost" href="https://github.com/Ridwannurudeen/pharos-medical-ai">Repository</a>
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Guardrail copy</p>
+            <h2>The wording is part of the product.</h2>
+          </div>
+          <p>The app repeats the educational boundary in the UI because the safest interaction warning tool is one that refuses to sound like a prescription engine.</p>
+        </div>
+        <div class="callout">Educational information only, not medical advice. Pharos never diagnoses or doses, and never tells you to start or stop a medication. Always confirm with a pharmacist or doctor.</div>
+        <div class="actions">
+          <a class="btn btn-primary" href="demo.html">See warning demo</a>
+          <a class="btn btn-ghost" href="tech.html">Review evidence</a>
+        </div>
       </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap cols">
-      <div><a class="brand" href="index.html"><span class="dot"></span> Pharos</a><p style="margin:10px 0 0; max-width:34ch">Private medical AI that works alone, and gets stronger together.</p></div>
-      <div class="links"><a href="how-it-works.html">How it works</a><a href="mesh.html">Mesh</a><a href="demo.html">Demo</a><a href="tech.html">Tech</a><a href="safety.html">Safety</a></div>
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="index.html"><img src="assets/brand/pharos-mark.svg" alt="" /> Pharos</a>
+        <p style="margin-top:12px; max-width:46ch">Grounded medication interaction warnings, not medical clearance.</p>
+      </div>
+      <div class="footer-links">
+        <a href="demo.html">Demo</a>
+        <a href="tech.html">Evidence</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="https://github.com/Ridwannurudeen/pharos-medical-ai">Repo</a>
+      </div>
     </div>
-    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Educational information only, not medical advice · Interaction data: DDInter 2.0 (CC BY-NC 4.0)</div>
+    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Built with Tether QVAC · Interaction data: DDInter 2.0</div>
   </footer>
   <script src="assets/app.js"></script>
 </body>

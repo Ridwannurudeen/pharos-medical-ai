@@ -3,76 +3,155 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Demo — Pharos</title>
-  <meta name="description" content="See Pharos catch a Major interaction, abstain on an unverifiable label, and run a scan in airplane mode — plus the cross-device mesh delegation." />
+  <title>Demo proof — Pharos</title>
+  <meta name="description" content="The Pharos demo path: scan a label, compare it against a private shelf, return a documented Major interaction, and explain the result on-device." />
+  <link rel="canonical" href="https://pharos.gudman.xyz/demo.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://pharos.gudman.xyz/demo.html" />
+  <meta property="og:title" content="Pharos demo proof" />
+  <meta property="og:description" content="S25 Ultra proof path for the Pharos on-device medication interaction demo." />
+  <meta property="og:image" content="https://pharos.gudman.xyz/og.png" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <meta name="twitter:title" content="Pharos demo proof" />
+  <meta name="twitter:description" content="Validated S25 demo flow for on-device medication interaction warnings." />
+  <meta name="twitter:image" content="https://pharos.gudman.xyz/og.png" />
+  <meta name="theme-color" content="#06120f" />
+  <link rel="icon" href="favicon.ico" sizes="any" />
+  <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="manifest" href="site.webmanifest" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;650;750;800;900&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="assets/style.css" />
 </head>
 <body>
+  <a class="skip-link" href="#main">Skip to content</a>
   <header class="site-header">
-    <nav class="nav wrap">
-      <a class="brand" href="index.html"><span class="dot"></span> Pharos</a>
+    <nav class="nav wrap" aria-label="Primary">
+      <a class="brand" href="index.html"><img src="assets/brand/pharos-mark.svg" alt="" /> Pharos</a>
       <button class="nav-toggle" aria-label="Menu" aria-expanded="false">☰</button>
       <div class="nav-links">
         <a href="index.html">Home</a>
-        <a href="how-it-works.html">How it works</a>
-        <a href="mesh.html">Mesh</a>
         <a href="demo.html">Demo</a>
-        <a href="tech.html">Tech</a>
+        <a href="tech.html">Evidence</a>
+        <a href="mesh.html">Mesh</a>
         <a href="safety.html">Safety</a>
+        <a class="nav-cta" href="https://github.com/Ridwannurudeen/pharos-medical-ai/releases/tag/apk-pr30-final">APK</a>
       </div>
     </nav>
   </header>
 
-  <main>
-    <section class="hero wrap" style="padding-bottom:32px">
-      <p class="eyebrow">Demo</p>
-      <h1>See it <span class="mint">catch, abstain, and run offline.</span></h1>
-      <p class="lede">A short walkthrough on a real phone: a dangerous pair caught and explained, an unverifiable label safely refused, and a scan completing in airplane mode.</p>
-    </section>
-
-    <section class="wrap" style="padding-top:8px">
-      <div class="video-frame">
-        <div>
-          <div style="font-size:2rem">▶</div>
-          <div style="margin-top:8px">Demo video coming soon</div>
-          <div style="font-size:0.82rem; margin-top:4px">≤5 min · recorded on a Pixel 10 Pro XL</div>
+  <main id="main">
+    <section class="page-hero">
+      <div class="wrap">
+        <p class="eyebrow">Demo proof</p>
+        <h1>Show the phone. Show the source. Show the guardrail.</h1>
+        <p class="lede">This page is the judge path for the working build: S25 Ultra final APK, visible label scan, private shelf comparison, documented DDInter interaction, and a bounded medical disclaimer.</p>
+        <div class="status-row">
+          <span class="status ok">S25 Ultra validated</span>
+          <span class="status ok">Final APK released</span>
+          <span class="status ok">QVAC SDK 0.12.2</span>
+          <span class="status">No cloud inference claim</span>
         </div>
       </div>
     </section>
 
-    <section class="wrap">
-      <div class="section-head"><p class="eyebrow">What you'll see</p><h2>The scripted, pre-verified cases</h2></div>
-      <div class="grid grid-3">
-        <div class="card">
-          <div class="scan-row" style="margin-bottom:10px"><span class="severity major">Major</span><strong>Aspirin + Warfarin</strong></div>
-          <p>Scan an aspirin label with Warfarin on the shelf. Pharos resolves to acetylsalicylic acid, finds the documented Major interaction, cites DDInter, and explains the bleeding risk.</p>
+    <section>
+      <div class="wrap demo-board">
+        <div class="demo-list">
+          <div class="demo-item">
+            <strong>1. Start on the shelf</strong>
+            <p>Add Warfarin to the saved medication shelf. The shelf is the user’s private context for comparison.</p>
+          </div>
+          <div class="demo-item">
+            <strong>2. Scan the label</strong>
+            <p>Point the camera at the Acipro label. Pharos reads Ciprofloxacin from the label and keeps the scan flow on-device.</p>
+          </div>
+          <div class="demo-item">
+            <strong>3. Return the warning</strong>
+            <p>The app reports Ciprofloxacin × Warfarin as Major, cites DDInter 2.0, and gives plain-language next steps.</p>
+          </div>
+          <div class="demo-item">
+            <strong>4. Explain the boundary</strong>
+            <p>Pharos is not saying a medication is safe or unsafe for a specific patient. It surfaces documented interactions for professional follow-up.</p>
+          </div>
         </div>
-        <div class="card">
-          <div class="scan-row" style="margin-bottom:10px"><span class="severity abstain">Abstain</span><strong>Paracetamol</strong></div>
-          <p>Scan a paracetamol label. The name doesn't resolve to the dataset, so Pharos abstains — "can't verify this one" — instead of inventing an answer.</p>
-        </div>
-        <div class="card">
-          <div class="ico">✈️</div><h3>Airplane mode</h3>
-          <p>Toggle airplane mode after the one-time model download, then scan again — it still works end-to-end, with a zero-traffic network capture to prove it.</p>
+        <div class="shot-frame">
+          <img src="assets/proof/s25-major-result.webp" alt="S25 Ultra Pharos result screen showing a Major ciprofloxacin and warfarin interaction." />
         </div>
       </div>
     </section>
 
-    <section class="wrap">
-      <div class="section-head"><p class="eyebrow">And the ceiling</p><h2>The mesh moment</h2></div>
-      <p>The walkthrough also shows the mesh tier: with a nearby anchor running MedPsy-4B, the phone delegates the explanation and the answer streams back from the bigger model — then the anchor is taken offline to show the graceful fallback to the on-device model.</p>
-      <div class="btn-row"><a class="btn btn-primary" href="tech.html">Reproduce the results →</a><a class="btn btn-ghost" href="mesh.html">How the mesh works</a></div>
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Validated screens</p>
+            <h2>The exact story to record.</h2>
+          </div>
+          <p>Use the real app for the demo. The screenshots below are only proof anchors so reviewers immediately understand what the live phone flow is expected to show.</p>
+        </div>
+        <div class="grid grid-3">
+          <div class="card">
+            <span class="kicker">Shelf</span>
+            <div class="shot-frame" style="min-height:260px"><img src="assets/proof/s25-warfarin-shelf.webp" alt="Warfarin saved on the Pharos shelf." /></div>
+            <h3 style="margin-top:16px">Private comparison set</h3>
+            <p>Warfarin is saved locally, then every scan is checked against it.</p>
+          </div>
+          <div class="card">
+            <span class="kicker">Scan</span>
+            <div class="shot-frame" style="min-height:260px"><img src="assets/proof/s25-scan-frame.webp" alt="Acipro ciprofloxacin label framed by the Pharos scanner." /></div>
+            <h3 style="margin-top:16px">Visible medication label</h3>
+            <p>The camera frame shows the label the app reads before the model explains anything.</p>
+          </div>
+          <div class="card danger">
+            <span class="kicker">Result</span>
+            <div class="shot-frame" style="min-height:260px"><img src="assets/proof/s25-major-result.webp" alt="Major interaction result with DDInter source." /></div>
+            <h3 style="margin-top:16px">Grounded Major warning</h3>
+            <p>The result cites DDInter 2.0 and stays inside an educational warning boundary.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section>
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <p class="eyebrow">Recording checklist</p>
+            <h2>Five minutes, no detours.</h2>
+          </div>
+          <p>The goal is not to show every feature. The strongest demo is one clean end-to-end run plus the evidence links.</p>
+        </div>
+        <div class="grid grid-3">
+          <div class="card"><h3>Open with the thesis</h3><p>“Pharos is private medication interaction AI. It retrieves documented interaction facts and explains them on-device.”</p></div>
+          <div class="card"><h3>Show the S25 flow</h3><p>Open shelf, scan the Acipro label, wait for the result, then call out Major and DDInter source.</p></div>
+          <div class="card"><h3>Close with proof</h3><p>Point to the final APK release, reproducibility docs, 38/38 checks, and the QVAC SDK integration.</p></div>
+        </div>
+        <div class="actions">
+          <a class="btn btn-primary" href="https://github.com/Ridwannurudeen/pharos-medical-ai/releases/tag/apk-pr30-final">Final APK release</a>
+          <a class="btn btn-ghost" href="tech.html">Evidence page</a>
+        </div>
+      </div>
     </section>
   </main>
 
   <footer class="site-footer">
-    <div class="wrap cols">
-      <div><a class="brand" href="index.html"><span class="dot"></span> Pharos</a><p style="margin:10px 0 0; max-width:34ch">Private medical AI that works alone, and gets stronger together.</p></div>
-      <div class="links"><a href="how-it-works.html">How it works</a><a href="mesh.html">Mesh</a><a href="demo.html">Demo</a><a href="tech.html">Tech</a><a href="safety.html">Safety</a></div>
+    <div class="wrap footer-grid">
+      <div>
+        <a class="brand" href="index.html"><img src="assets/brand/pharos-mark.svg" alt="" /> Pharos</a>
+        <p style="margin-top:12px; max-width:46ch">Educational medication interaction information only. Always confirm medical decisions with a licensed professional.</p>
+      </div>
+      <div class="footer-links">
+        <a href="index.html">Home</a>
+        <a href="tech.html">Evidence</a>
+        <a href="mesh.html">Mesh</a>
+        <a href="safety.html">Safety</a>
+        <a href="https://github.com/Ridwannurudeen/pharos-medical-ai">Repo</a>
+      </div>
     </div>
-    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Educational information only, not medical advice · Interaction data: DDInter 2.0 (CC BY-NC 4.0)</div>
+    <div class="wrap" style="margin-top:24px">© <span id="year">2026</span> Pharos · Built with Tether QVAC · Interaction data: DDInter 2.0</div>
   </footer>
   <script src="assets/app.js"></script>
 </body>
