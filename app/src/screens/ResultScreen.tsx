@@ -9,7 +9,8 @@ import { DisclaimerBanner } from "../components/DisclaimerBanner";
 import { InteractionCard } from "../components/InteractionCard";
 import { MeshStatusChip } from "../components/MeshStatusChip";
 import { StreamingText } from "../components/StreamingText";
-import type { ResultNotice } from "../mesh";
+import type { ScanResult } from "../engine";
+import type { MeshStatus, ResultNotice } from "../mesh";
 import type { ScanStackParamList } from "../navigation/types";
 import { colors, font, radius, spacing } from "../theme";
 
@@ -58,6 +59,80 @@ function NoticeCard({ notice }: { notice: ResultNotice }) {
   );
 }
 
+function decisionCopy(result: ScanResult) {
+  if (result.abstained) {
+    return {
+      icon: "help-circle-outline" as const,
+      tone: "neutral" as const,
+      label: "No guess",
+      title: "Verification stopped",
+      body:
+        "Pharos did not find enough documented evidence to show an interaction result. This is not a safety approval.",
+    };
+  }
+
+  if (result.interactions.length > 0) {
+    return {
+      icon: "warning-outline" as const,
+      tone: "danger" as const,
+      label: "Warning",
+      title: "Documented interaction found",
+      body:
+        "The scanned medicine matched something on your shelf in DDInter. Treat this as a medication-safety flag and confirm with a pharmacist.",
+    };
+  }
+
+  return {
+    icon: "document-text-outline" as const,
+    tone: "neutral" as const,
+    label: "No DDInter match",
+    title: "No documented interaction found",
+    body:
+      "Pharos found no DDInter interaction against your shelf. That is not a guarantee the medicine is safe for you.",
+  };
+}
+
+function modeCopy(status: MeshStatus) {
+  switch (status) {
+    case "delegating":
+      return "Phone handled OCR and DDInter grounding; a nearby anchor handled the heavier MedPsy explanation.";
+    case "fell-back":
+      return "The nearby anchor was unavailable, so the scan completed locally on this phone.";
+    default:
+      return "OCR, DDInter lookup, and MedPsy explanation completed on this phone. After setup, this path works in airplane mode.";
+  }
+}
+
+function explanationNote(status: MeshStatus) {
+  return status === "delegating"
+    ? "Plain-language context from the nearby MedPsy model. Background only, not a DDInter field."
+    : "Plain-language context from the on-device model. Background only, not a DDInter field.";
+}
+
+function DecisionCard({ result }: { result: ScanResult }) {
+  const copy = decisionCopy(result);
+  const color = copy.tone === "danger" ? colors.danger : colors.inkSoft;
+  return (
+    <View style={[styles.decision, { borderLeftColor: color }]}>
+      <View style={styles.decisionHead}>
+        <Ionicons name={copy.icon} size={19} color={color} />
+        <Text style={[styles.decisionLabel, { color }]}>{copy.label}</Text>
+      </View>
+      <Text style={styles.decisionTitle}>{copy.title}</Text>
+      <Text style={styles.decisionBody}>{copy.body}</Text>
+    </View>
+  );
+}
+
+function ModeCard({ status }: { status: MeshStatus }) {
+  return (
+    <View style={styles.modeCard}>
+      <Ionicons name="hardware-chip-outline" size={17} color={colors.accent} />
+      <Text style={styles.modeText}>{modeCopy(status)}</Text>
+    </View>
+  );
+}
+
 export function ResultScreen({ route }: Props) {
   const { meshStatus, notice, result } = route.params;
   const status = meshStatus ?? (result.delegated ? "delegating" : "on-device");
@@ -85,6 +160,8 @@ export function ResultScreen({ route }: Props) {
 
         {result.delegated ? <DelegatedBadge /> : null}
         {notice ? <NoticeCard notice={notice} /> : null}
+        <DecisionCard result={result} />
+        <ModeCard status={status} />
 
         {result.abstained ? (
           <AbstainCard reason={result.abstainReason} rawText={result.scan.rawText} />
@@ -110,7 +187,7 @@ export function ResultScreen({ route }: Props) {
             <Text style={styles.explainLabel}>In plain language</Text>
             <StreamingText text={result.explanation} style={styles.explainText} />
             <Text style={styles.explainNote}>
-              Plain-language context from the on-device model. Background only, not a DDInter field.
+              {explanationNote(status)}
             </Text>
           </View>
         ) : null}
@@ -146,6 +223,37 @@ const styles = StyleSheet.create({
   noticeText: { flex: 1, gap: 2 },
   noticeTitle: { color: colors.danger, fontSize: font.small, fontWeight: "800" },
   noticeBody: { color: colors.inkSoft, fontSize: font.small, lineHeight: 19 },
+  decision: {
+    backgroundColor: colors.surface,
+    borderColor: colors.line,
+    borderLeftWidth: 4,
+    borderRadius: radius.md,
+    borderWidth: 1,
+    gap: spacing.xs,
+    padding: spacing.lg,
+  },
+  decisionHead: {
+    alignItems: "center",
+    flexDirection: "row",
+    gap: spacing.xs,
+  },
+  decisionLabel: {
+    fontSize: font.tiny,
+    fontWeight: "800",
+    letterSpacing: 0.6,
+    textTransform: "uppercase",
+  },
+  decisionTitle: { color: colors.ink, fontSize: font.h3, fontWeight: "900" },
+  decisionBody: { color: colors.inkSoft, fontSize: font.small, lineHeight: 19 },
+  modeCard: {
+    alignItems: "flex-start",
+    backgroundColor: colors.accentSoft,
+    borderRadius: radius.md,
+    flexDirection: "row",
+    gap: spacing.sm,
+    padding: spacing.md,
+  },
+  modeText: { color: colors.inkSoft, flex: 1, fontSize: font.small, lineHeight: 19 },
   section: { gap: spacing.md },
   sectionLabel: { color: colors.inkSoft, fontSize: font.small, fontWeight: "700" },
   noneCard: {

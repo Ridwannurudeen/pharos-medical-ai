@@ -1,0 +1,16 @@
+{
+  "name": "Pharos",
+  "short_name": "Pharos",
+  "description": "Private on-device medication interaction AI built on Tether QVAC.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06120f",
+  "theme_color": "#06120f",
+  "icons": [
+    {
+      "src": "/apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png"
+    }
+  ]
+}

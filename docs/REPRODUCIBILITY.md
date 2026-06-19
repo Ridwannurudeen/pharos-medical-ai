@@ -9,6 +9,7 @@ Everything here was run and verified, not asserted. Three levels: (1) the data/g
 - **Build/validation host:** WSL2 **Ubuntu 24.04** on Windows (32 vCPU / 15 GB RAM, **no GPU exposed to WSL**), **Node 24.16.0**.
 - **SDK:** `@qvac/sdk@0.12.2` (npm latest at time of writing); `react-native-bare-kit@^0.14.0` (the SDK's optional peer; installed 0.14.3).
 - **Models (Q4_K_M GGUF, from Hugging Face):** `qvac/MedPsy-1.7B-GGUF` `medpsy-1.7b-q4_k_m-imat.gguf` (1.28 GB, phone/solo) and `qvac/MedPsy-4B-GGUF` `medpsy-4b-q4_k_m-imat.gguf` (**2,716,068,640 bytes**, anchor). OCR uses the SDK's `OCR_LATIN_RECOGNIZER_1` (+ CRAFT detector), pulled ~15 MB from S3 on first run, cached offline after.
+- **Phone validation:** **Samsung S25 Ultra** passed the real app gate on PR #30 head `cbc1d1f`: Aspirin + Warfarin → Major DDInter warning, Paracetamol → abstain, airplane-mode cached repeat → pass. See [`S25-VALIDATION.md`](S25-VALIDATION.md).
 - **Demo hardware:** consumer = **Google Pixel 10 Pro XL** (GPU-accelerated — QVAC ships `android-arm64` Vulkan/OpenCL backends); anchor = an **RTX 5060 / 32 GB** box. Note: the stock `linux-x64` QVAC build ships **no** CUDA/Vulkan backend, so the anchor runs the 4B on **CPU** (the GPU is not used there).
 
 > **Windows caveat:** the QVAC inference worker does **not** start on native Windows (`RPC_INIT_TIMEOUT`, code 50204). Run all model steps on **Linux / WSL2 / macOS / the phone**, not native Windows.
@@ -48,6 +49,21 @@ MEDPSY_1_7B=$PWD/models/medpsy-1.7b-q4_k_m-imat.gguf node spike/validate-safety.
 Expected (verified): `VALIDATE SAFETY: PASS ✓` —
 1. **Abstain** — a PARACETAMOL label → `abstained=true`, 0 interactions (paracetamol isn't in DDInter; the system refuses to guess).
 2. **No fabrication** — aspirin + ascorbic acid → `matched=true` but 0 interactions (never invents one).
+
+### Level 2b — the real app on Samsung S25 Ultra
+
+PR #30 (`cbc1d1f`) was installed on a physical Samsung S25 Ultra with the real Expo 54 / RN 0.81
+app and QVAC native runtime. The validation pass covered:
+
+- startup with bundled `pharos.db`;
+- MedPsy-1.7B loaded from the app sandbox without a first-launch phone download;
+- QVAC worker and OCR models initialized from local cache;
+- real camera capture passed raw image paths to QVAC OCR;
+- clean Aspirin / Warfarin label produced a cited **Major** DDInter result;
+- clean Paracetamol / Acetaminophen label abstained instead of fabricating an interaction;
+- airplane-mode repeat completed from cached local assets.
+
+See [`S25-VALIDATION.md`](S25-VALIDATION.md) for the exact build, final APK, and watch items.
 
 ## Level 3 — P2P mesh delegation (Gate A tier-1)
 

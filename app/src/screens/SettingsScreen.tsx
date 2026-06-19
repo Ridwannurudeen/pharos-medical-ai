@@ -27,6 +27,17 @@ export function SettingsScreen() {
 
         <View style={styles.card}>
           <View style={styles.cardHead}>
+            <Ionicons name="warning-outline" size={18} color={colors.danger} />
+            <Text style={styles.cardTitle}>Warning tool, not a green light</Text>
+          </View>
+          <Text style={styles.cardBody}>
+            Pharos shows documented interaction warnings when it can verify them in DDInter. If it
+            finds no match or abstains, that does not mean a medicine is safe for you.
+          </Text>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
             <Ionicons
               name={online ? "cloud-outline" : "airplane-outline"}
               size={18}
@@ -40,6 +51,18 @@ export function SettingsScreen() {
               : online
                 ? "Network is on, but Pharos makes no network calls. Turn on airplane mode and everything still works."
                 : "Network is off. Pharos is working fully on-device — this is the intended mode."}
+          </Text>
+        </View>
+
+        <View style={styles.card}>
+          <View style={styles.cardHead}>
+            <Ionicons name="git-network-outline" size={18} color={colors.inkSoft} />
+            <Text style={styles.cardTitle}>Works alone, stronger together</Text>
+          </View>
+          <Text style={styles.cardBody}>
+            The validated path runs OCR, DDInter lookup, and MedPsy locally on the phone. When a
+            configured QVAC anchor is nearby, the phone can keep the scan private while delegating
+            the heavier explanation to the larger model.
           </Text>
         </View>
 

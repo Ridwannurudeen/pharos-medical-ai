@@ -15,6 +15,15 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 
 **Tracks:** General Purpose + Psy Models (MedPsy).
 
+## Current standing
+
+- **Merged phone app:** PR #30 upgraded the app to Expo SDK 54 / RN 0.81 and packages the QVAC native runtime.
+- **Validated on hardware:** Samsung S25 Ultra completed the real solo-tier gate: Aspirin + Warfarin → **Major** DDInter warning, Paracetamol → abstain/no fabrication, and an airplane-mode cached repeat.
+- **Final APK:** non-debuggable `pharos-s25-cbc1d1f-final.apk` is published under the `apk-pr30-final` release with SHA256 `c17df918e1d9908c3ac0c880a354e303e0939625c8a5773e4400a42ddc4bdd88`.
+- **Public validation notes:** see [`docs/S25-VALIDATION.md`](docs/S25-VALIDATION.md).
+
+The important product boundary: Pharos is a **documented interaction warning tool**, not a safety approval tool. "No documented interaction found" and abstain states are safe failures, not a claim that a medicine is safe for a specific patient.
+
 ## Repo structure
 
 ```
@@ -30,11 +39,11 @@ pharos/
 
 `scripts/` and the data pipeline were built early as **disclosed prior work**; the real engine (`core/`), the phone app (`app/`), and the mesh provider/consumer (`spike/`) are judged build-period work. The mesh anchor currently runs from the `spike/` scripts (a dedicated `anchor/` package is a possible later extraction).
 
-## Stack (planned)
+## Stack
 
-- React Native via Expo (bare workflow if native modules require it)
+- React Native via Expo SDK 54 / RN 0.81
 - `@qvac/sdk` — **all** inference: OCR, translation/normalization, MedPsy completion, RAG, P2P delegation, model registry
-- `expo-camera` / `react-native-vision-camera`, `expo-sqlite`, `expo-network`
+- `expo-camera`, `expo-sqlite`, `expo-network`, `expo-secure-store`
 - Node.js for the laptop anchor node
 
 > ✅ The engine is **run-validated on `@qvac/sdk@0.12.2`** (real OCR + MedPsy, grounded Major + abstain + no-fabrication; see [`docs/REPRODUCIBILITY.md`](docs/REPRODUCIBILITY.md)). Signatures + mesh-plan corrections are in [`docs/qvac-sdk-reference.md`](docs/qvac-sdk-reference.md) (delegation via `loadModel({ delegate })`; no mid-stream failover — `fallbackToLocal` instead). Confirm against the live docs (https://docs.qvac.tether.io/reference/api/) if the SDK version changes.
@@ -61,6 +70,7 @@ Full, verified reproduce-the-results guide: **[`docs/REPRODUCIBILITY.md`](docs/R
 
 - One-command verifier: `npm run verify` runs the grounded chain + abstain + audit + resource-log (38 checks).
 - Real-inference harnesses: `spike/validate-engine.ts` (grounded Major), `spike/validate-safety.ts` (abstain + no-fabrication) — both PASS on `@qvac/sdk@0.12.2` (non-Windows).
+- S25 app validation: [`docs/S25-VALIDATION.md`](docs/S25-VALIDATION.md) records the merged PR head, final APK, clean-label gates, and offline repeat.
 - Remote API calls for inference: **none** (all OCR + MedPsy local; see REPRODUCIBILITY.md for the two network touchpoints).
 
 ## Verification artifacts
