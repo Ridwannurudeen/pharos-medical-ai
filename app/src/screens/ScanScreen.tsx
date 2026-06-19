@@ -203,7 +203,7 @@ export function ScanScreen({ navigation }: Props) {
       }
       const photo = await Promise.race([
         cameraRef.current.takePictureAsync({
-          quality: 0.7,
+          quality: 1,
         }),
         new Promise<never>((_, reject) => {
           timeout = setTimeout(
