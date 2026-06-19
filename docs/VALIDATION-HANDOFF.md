@@ -140,6 +140,26 @@ Include:
 - Paths for the clean-label Major pass, abstain pass, airplane-mode repeat, final APK smoke proof, and label matrix.
 - One-line status for each case: pass, abstain-as-expected, observation, or blocker.
 
+### 7. Device validation expansion
+
+Dolepee owns the validation items that require real devices, physical labels, logcat, and
+storage/runtime measurements. Add a short result note for each item to the evidence manifest.
+
+Required checks:
+
+- Try at least one additional Android device if available. If none is available, mark broader Android coverage as not tested.
+- Record OCR latency for every label-matrix case and identify the slowest case.
+- Capture the CameraX reset or broken-pipe logs and confirm whether the next scan still works after navigation or relaunch.
+- Record installed APK size and app storage after OCR assets, `pharos.db`, and MedPsy are present.
+- Confirm MedPsy timeout fallback stays grounded in DDInter and does not invent an interaction.
+- Try one difficult-label case from each available category: bad lighting, handwritten text, multi-drug label, non-English label, low-end Android device.
+
+Success criteria:
+
+- A limitation may remain unresolved, but it must have a concrete device note: pass, abstain-as-expected, not tested, observation, or blocker.
+- False positive medical claims, crashes, or stuck scan states should be marked as blockers.
+- Slow scans, CameraX noise, storage size, and unsupported label classes can remain non-blocking if documented honestly.
+
 ## Project-owned follow-up
 
 ### 1. Submission framing
@@ -174,6 +194,18 @@ The next product-hardening track is label robustness:
 - Expand aliases beyond the current small synonym set.
 - Keep abstain behavior when confidence is low.
 
+### 4. Non-device limitation disclosures
+
+The project owner keeps the submission honest for limitations that are not solved by one more device
+run:
+
+- State that sideload APK distribution is not Play Store production readiness.
+- State that the repo had a quick tracked-file secret scan, not a deep git-history audit.
+- State that the project is educational and not clinically or regulatorily validated.
+- State that DDInter 2.0 and the current synonym layer bound drug coverage.
+- State that there is no live model or DDInter update pipeline yet.
+- Keep fresh-install offline claims tied to Dolepee's offline-boundary proof.
+
 ## Known limitations
 
 1. Final non-debuggable APK still needs one last S25 smoke proof after install-over-current-app.
@@ -191,3 +223,23 @@ The next product-hardening track is label robustness:
 13. There is no clinical or regulatory validation.
 14. Bad lighting, handwritten labels, multi-drug labels, non-English labels, and low-end Android devices are not broadly tested.
 15. There is no live model or DDInter update pipeline yet.
+
+## Limitation owner matrix
+
+| Limitation | Primary owner | Required handling |
+|---|---|---|
+| Final non-debuggable APK smoke proof | Dolepee | Install over current app, preserve staged data, save SHA/install/startup/result proof. |
+| Arbitrary real-world packaging | Dolepee | Run the label matrix; mark clean labels, noisy labels, abstains, false positives, and blockers. |
+| Fresh-install offline boundary | Dolepee | Prove staged offline behavior and document whether fresh install needs pre-airplane-mode asset staging. |
+| One-device validation floor | Dolepee | Try another Android device if available; otherwise mark broader Android coverage as not tested. |
+| OCR latency | Dolepee | Record timings for label-matrix cases and call out the slowest reproducible case. |
+| CameraX reset or broken-pipe logs | Dolepee | Capture logcat and confirm whether scan flow recovers after navigation or relaunch. |
+| DDInter and synonym coverage bounds | Project owner | Disclose coverage limits and keep the brand/generic expansion in the roadmap. |
+| MedPsy timeout fallback | Dolepee | Confirm fallback remains DDInter-grounded and does not fabricate interactions. |
+| APK plus MedPsy storage footprint | Dolepee | Record installed size and staged app-data size on device. |
+| Evidence only on validator machine | Dolepee | Upload/package artifacts and maintain `MANIFEST.md`. |
+| Sideload APK distribution | Project owner | Disclose that this is a hackathon APK, not app-store production distribution. |
+| No deep git-history audit | Project owner | Disclose tracked-file scan scope; do not claim a full secret-history audit. |
+| No clinical or regulatory validation | Project owner | Keep educational-only and non-clinical wording in submission materials. |
+| Difficult labels and low-end devices | Dolepee | Test any available difficult-label/low-end cases and mark unsupported cases honestly. |
+| No live model or DDInter update pipeline | Project owner | Disclose static bundled assets and keep update pipeline as future work. |
