@@ -13,6 +13,7 @@
     "build-data": "node scripts/build-data.ts",
     "data": "npm run fetch-data && npm run build-data",
     "verify": "node scripts/verify-data.ts",
+    "scan:history": "node scripts/scan-git-history.ts",
     "typecheck": "tsc --noEmit",
     "build:core": "tsc -p tsconfig.build.json",
     "build:engine": "tsc -p tsconfig.engine.json",

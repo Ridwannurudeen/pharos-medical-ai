@@ -199,8 +199,11 @@ The next product-hardening track is label robustness:
 The project owner keeps the submission honest for limitations that are not solved by one more device
 run:
 
+- Keep [`PROJECT-LIMITATION-STATUS.md`](PROJECT-LIMITATION-STATUS.md) current before submission.
+- Track broader Android coverage in [`ANDROID-VALIDATION-MATRIX.md`](ANDROID-VALIDATION-MATRIX.md).
+- Track static asset/update boundaries in [`ASSET-UPDATE-PLAN.md`](ASSET-UPDATE-PLAN.md).
+- Run `npm run scan:history` and record the redacted result.
 - State that sideload APK distribution is not Play Store production readiness.
-- State that the repo had a quick tracked-file secret scan, not a deep git-history audit.
 - State that the project is educational and not clinically or regulatorily validated.
 - State that DDInter 2.0 and the current synonym layer bound drug coverage.
 - State that there is no live model or DDInter update pipeline yet.
@@ -227,20 +230,20 @@ run:
 
 ## Limitation owner matrix
 
-| Limitation | Owner | Required handling |
-|---|---|---|
-| Final non-debuggable APK smoke proof | Dolepee | Install over current app, preserve staged data, save SHA/install/startup/result proof. |
-| Arbitrary real-world packaging | Dolepee | Run the label matrix; mark clean labels, noisy labels, abstains, false positives, and blockers. |
-| Fresh-install offline boundary | Dolepee | Prove staged offline behavior and document whether fresh install needs pre-airplane-mode asset staging. |
-| One-device validation floor | Project owner | Keep Dolepee's S25 proof as the validation floor and separately own any second-device Android validation. |
-| OCR latency | Dolepee | Record timings for label-matrix cases and call out the slowest reproducible case. |
-| CameraX reset or broken-pipe logs | Dolepee | Capture logcat and confirm whether scan flow recovers after navigation or relaunch. |
-| DDInter and synonym coverage bounds | Project owner | Disclose coverage limits and keep the brand/generic expansion in the roadmap. |
-| MedPsy timeout fallback | Dolepee | Confirm fallback remains DDInter-grounded and does not fabricate interactions. |
-| APK plus MedPsy storage footprint | Dolepee | Record installed size and staged app-data size on device. |
-| Evidence only on validator machine | Dolepee | Upload/package artifacts and maintain `MANIFEST.md`. |
-| Sideload APK distribution | Project owner | Disclose that this is a hackathon APK, not app-store production distribution. |
-| No deep git-history audit | Project owner | Disclose tracked-file scan scope; do not claim a full secret-history audit. |
-| No clinical or regulatory validation | Project owner | Keep educational-only and non-clinical wording in submission materials. |
-| Difficult labels and low-end devices | Split | Dolepee tests available difficult-label cases on S25; project owner owns second-device and low-end-device validation. |
-| No live model or DDInter update pipeline | Project owner | Disclose static bundled assets and keep update pipeline as future work. |
+| Limitation                               | Owner         | Required handling                                                                                                     |
+| ---------------------------------------- | ------------- | --------------------------------------------------------------------------------------------------------------------- |
+| Final non-debuggable APK smoke proof     | Dolepee       | Install over current app, preserve staged data, save SHA/install/startup/result proof.                                |
+| Arbitrary real-world packaging           | Dolepee       | Run the label matrix; mark clean labels, noisy labels, abstains, false positives, and blockers.                       |
+| Fresh-install offline boundary           | Dolepee       | Prove staged offline behavior and document whether fresh install needs pre-airplane-mode asset staging.               |
+| One-device validation floor              | Project owner | Keep Dolepee's S25 proof as the validation floor and separately own any second-device Android validation.             |
+| OCR latency                              | Dolepee       | Record timings for label-matrix cases and call out the slowest reproducible case.                                     |
+| CameraX reset or broken-pipe logs        | Dolepee       | Capture logcat and confirm whether scan flow recovers after navigation or relaunch.                                   |
+| DDInter and synonym coverage bounds      | Project owner | Disclose coverage limits and keep the brand/generic expansion in the roadmap.                                         |
+| MedPsy timeout fallback                  | Dolepee       | Confirm fallback remains DDInter-grounded and does not fabricate interactions.                                        |
+| APK plus MedPsy storage footprint        | Dolepee       | Record installed size and staged app-data size on device.                                                             |
+| Evidence only on validator machine       | Dolepee       | Upload/package artifacts and maintain `MANIFEST.md`.                                                                  |
+| Sideload APK distribution                | Project owner | Disclose that this is a hackathon APK, not app-store production distribution.                                         |
+| No deep git-history audit                | Project owner | Run `npm run scan:history`, record the redacted result, and avoid claiming a third-party forensic audit.              |
+| No clinical or regulatory validation     | Project owner | Keep educational-only and non-clinical wording in submission materials.                                               |
+| Difficult labels and low-end devices     | Split         | Dolepee tests available difficult-label cases on S25; project owner owns second-device and low-end-device validation. |
+| No live model or DDInter update pipeline | Project owner | Disclose static bundled assets and use `ASSET-UPDATE-PLAN.md` as the future-work boundary.                            |

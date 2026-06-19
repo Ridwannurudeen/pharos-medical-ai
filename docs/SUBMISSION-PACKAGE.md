@@ -11,6 +11,9 @@ framing. It is intentionally conservative: it claims only what was validated or 
 - Final APK release: <https://github.com/Ridwannurudeen/pharos-medical-ai/releases/tag/apk-pr30-final>
 - Final APK asset: <https://github.com/Ridwannurudeen/pharos-medical-ai/releases/download/apk-pr30-final/pharos-s25-cbc1d1f-final.apk>
 - Final APK SHA256: `c17df918e1d9908c3ac0c880a354e303e0939625c8a5773e4400a42ddc4bdd88`
+- Project limitation status: [`docs/PROJECT-LIMITATION-STATUS.md`](PROJECT-LIMITATION-STATUS.md)
+- Android validation matrix: [`docs/ANDROID-VALIDATION-MATRIX.md`](ANDROID-VALIDATION-MATRIX.md)
+- Asset update plan: [`docs/ASSET-UPDATE-PLAN.md`](ASSET-UPDATE-PLAN.md)
 
 ## Validated claims
 
@@ -48,6 +51,8 @@ Submission should include or link to:
 - Screenshots/logs for Paracetamol / Acetaminophen abstain pass.
 - Screenshots/logs for airplane-mode cached repeat pass.
 - Any watch-item notes for OCR latency and CameraX reset logs.
+- Redacted git-history scan result from `npm run scan:history`.
+- Android validation matrix if any device beyond S25 is tested.
 
 ## Limitation framing
 
@@ -63,7 +68,7 @@ yet reliable enough to advertise as universal.
 
 ## Current limitations
 
-1. Final non-debuggable APK still needs Dolepee's one last install-over-current-app smoke proof.
+1. Final non-debuggable APK smoke proof is tracked in PR #35 and should be cited from the durable evidence bundle.
 2. Clean generic labels are validated; arbitrary real-world packaging remains limited.
 3. Offline mode is proven after cache/staging, not on a completely fresh install.
 4. S25 Ultra is the only completed device validation.
@@ -74,10 +79,18 @@ yet reliable enough to advertise as universal.
 9. The APK and MedPsy model have a large storage footprint.
 10. Evidence must be moved from the validator's local machine to a durable submission location.
 11. Sideload APK distribution is not a production app-store channel.
-12. There has been a quick tracked-file secret scan before public release, not a deep history audit.
+12. A redacted reachable-history secret scan is available through `npm run scan:history`; record the latest local result before submission.
 13. There is no clinical or regulatory validation.
 14. Bad lighting, handwritten labels, multi-drug labels, non-English labels, and low-end Android devices are not broadly tested.
 15. There is no live model or DDInter update pipeline yet.
+
+## Project-owned limitation handling
+
+- Sideload APK distribution is disclosed as a hackathon artifact, not app-store readiness.
+- Clinical/regulatory validation is explicitly out of scope; the app is educational information only.
+- Broader Android coverage is tracked separately in [`ANDROID-VALIDATION-MATRIX.md`](ANDROID-VALIDATION-MATRIX.md).
+- Static DDInter/model asset boundaries and future update requirements are tracked in [`ASSET-UPDATE-PLAN.md`](ASSET-UPDATE-PLAN.md).
+- The repo includes a redacted history scan command: `npm run scan:history`.
 
 ## Robustness roadmap
 
