@@ -18,7 +18,7 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 - **🟢 Solo tier (works on any one phone, airplane mode):** OCR a pill bottle/label → normalize to the drug's generic name → look up interactions against your saved medication shelf → MedPsy explains the result in plain language. Everything on-device; provable with a zero-traffic network capture.
 - **🔵 Mesh tier (kicks in when a peer anchor is present):** a case is delegated over the Holepunch DHT to a laptop "anchor" running the larger MedPsy-4B; OCR + grounding stay on the phone. If the anchor is unreachable, it falls back to the on-device model (`fallbackToLocal`). *Verified against the SDK: peer-to-peer model **pull** and mid-stream peer-failover are **not** supported — mesh is tier-1 delegation only, and peer discovery uses the DHT, which needs WAN to bootstrap (so the mesh tier is local-network, not airplane-mode; the solo tier is the offline story).*
 
-**Tracks:** General Purpose + Psy Models (MedPsy).
+**Track:** Mobile — a phone-first, on-device medical AI for real consumer hardware (validated on a Samsung S25 Ultra). The optional mesh tier also exercises the General Purpose track (a laptop anchor running the larger MedPsy-4B). MedPsy-1.7B + MedPsy-4B cover the Model Usage criterion.
 
 ## Current standing
 
@@ -28,6 +28,12 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 - **Public validation notes:** see [`docs/S25-VALIDATION.md`](docs/S25-VALIDATION.md).
 
 The important product boundary: Pharos is a **documented interaction warning tool**, not a safety approval tool. "No documented interaction found" and abstain states are safe failures, not a claim that a medicine is safe for a specific patient.
+
+## How the AI runs (QVAC)
+
+**All AI inference runs on the QVAC SDK** (`@qvac/sdk`): the label scan uses QVAC OCR, and the plain-language explanation uses MedPsy via QVAC `completion` — on-device for the solo tier, or delegated to a peer anchor's MedPsy-4B for the mesh tier. No cloud inference.
+
+For the retrieval step we made a deliberate safety choice: instead of vector RAG, Pharos uses **deterministic retrieval** against the bundled DDInter 2.0 database (normalize the drug to its generic name, then look up documented interactions). A medication-safety tool must never *invent* an interaction, so a grounded database lookup — which can only return documented facts or abstain — is safer here than similarity search over embeddings. The model explains the retrieved fact; it never sources the fact itself.
 
 ## Repo structure
 
