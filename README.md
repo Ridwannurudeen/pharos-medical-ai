@@ -8,6 +8,11 @@ A phone reads your medication, explains it, and catches dangerous interactions �
 
 ---
 
+## Demo
+
+- 🎥 **Demo video:** https://youtu.be/IZ1pvoh76R0
+- 🌐 **Live site:** https://pharos.gudman.xyz
+
 ## The idea — one product, two tiers
 
 - **🟢 Solo tier (works on any one phone, airplane mode):** OCR a pill bottle/label → normalize to the drug's generic name → look up interactions against your saved medication shelf → MedPsy explains the result in plain language. Everything on-device; provable with a zero-traffic network capture.
