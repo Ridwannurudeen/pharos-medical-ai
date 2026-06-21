@@ -17,7 +17,9 @@ export interface Engine {
   ocr(image: string | Uint8Array): Promise<{ text: string; latencyMs: number }>;
   /** extract the generic/active-ingredient name from OCR text (translation etc.); null = couldn't extract */
   normalize(text: string): Promise<{ generic: string | null }>;
-  /** MedPsy explains ONLY the retrieved interactions in plain language */
+  /** MedPsy explains ONLY the retrieved interactions in plain language.
+   *  Perf fields are optional so test fakes can return just { text }; the real
+   *  QVAC engine fills them in for the audit log (TTFT, tokens, tokens/sec). */
   explain(
     input: {
       scan: ScanResult["scan"];
@@ -25,7 +27,14 @@ export interface Engine {
       interactions: Interaction[];
     },
     opts?: ExplainOptions,
-  ): Promise<{ text: string }>;
+  ): Promise<{
+    text: string;
+    model?: string;
+    promptTokens?: number;
+    completionTokens?: number;
+    ttftMs?: number;
+    tokensPerSec?: number;
+  }>;
 }
 
 export interface PipelineDeps {
@@ -103,7 +112,14 @@ export function createScanPipeline(deps: PipelineDeps) {
       { scan, shelf, interactions },
       opts,
     );
-    deps.audit.log("medpsy_end", { delegated });
+    deps.audit.log("medpsy_end", {
+      delegated,
+      model: explanation.model,
+      prompt_tokens: explanation.promptTokens,
+      completion_tokens: explanation.completionTokens,
+      ttft_ms: explanation.ttftMs,
+      tokens_per_sec: explanation.tokensPerSec,
+    });
 
     deps.audit.log("scan_result", {
       abstained: false,

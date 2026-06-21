@@ -21,7 +21,10 @@ import { loadModel, ocr, completion, unloadModel } from "@qvac/sdk";
 import { OCR_LATIN_RECOGNIZER_1 } from "@qvac/sdk";
 import type { Engine } from "./pipeline.ts";
 import type { Grounding } from "./grounding.ts";
+import type { AuditLog } from "./audit.ts";
 import { createNormalizer } from "./normalize.ts";
+
+const basename = (p: string): string => p.split(/[\\/]/).pop() ?? p;
 
 const EXPLAIN_TIMEOUT_MS = 30_000;
 const EXPLAIN_TIMEOUT = Symbol("explain-timeout");
@@ -43,7 +46,9 @@ function mergeOcrText(blocks: OcrTextBlock[]): string {
   const primary = cleaned
     .filter(
       (block) =>
-        block.confidence === undefined || typeof block.confidence !== "number" || block.confidence >= 0.35,
+        block.confidence === undefined ||
+        typeof block.confidence !== "number" ||
+        block.confidence >= 0.35,
     )
     .map((block) => block.text)
     .join(" ")
@@ -52,7 +57,11 @@ function mergeOcrText(blocks: OcrTextBlock[]): string {
 
   if (primary.length >= LOW_OCR_TEXT_THRESHOLD) return primary;
 
-  return cleaned.map((block) => block.text).join(" ").trim().replace(/\s+/g, " ");
+  return cleaned
+    .map((block) => block.text)
+    .join(" ")
+    .trim()
+    .replace(/\s+/g, " ");
 }
 
 async function runOcrWithParagraph(
@@ -130,6 +139,9 @@ export interface QvacEngineConfig {
      *  anchor-down at the app level by running without a delegate (the solo on-device model). */
     fallbackToLocal?: boolean;
   };
+  /** optional audit log; when present, the engine emits model_load / model_unload events
+   *  (the inference-performance medpsy events are emitted by the pipeline from explain()'s metrics). */
+  audit?: AuditLog;
 }
 
 export interface QvacEngine extends Engine {
@@ -140,13 +152,25 @@ export interface QvacEngine extends Engine {
 export async function createQvacEngine(
   cfg: QvacEngineConfig,
 ): Promise<QvacEngine> {
+  const ocrLoadStart = Date.now();
   const ocrModelId = await loadModel({
     modelSrc: OCR_LATIN_RECOGNIZER_1,
     modelType: "onnx-ocr",
   });
+  cfg.audit?.log("model_load", {
+    model: "OCR_LATIN_RECOGNIZER_1",
+    model_type: "onnx-ocr",
+    source: "s3-registry",
+    load_ms: Date.now() - ocrLoadStart,
+  });
   // Solo: load the phone's local MedPsy. Mesh: delegate explain to the anchor — load the ANCHOR's
   // model by its provider-side path (delegation resolves modelSrc on the provider's disk, so the
   // phone's local path would be wrong; verified cross-device 2026-06-16).
+  const modelLabel = basename(
+    cfg.delegate ? cfg.delegate.modelSrc : cfg.medpsyModelSrc,
+  );
+  const llmSource = cfg.delegate ? "peer" : "local";
+  const llmLoadStart = Date.now();
   let llmModelId: Awaited<ReturnType<typeof loadModel>>;
   if (cfg.delegate) {
     const { modelSrc, ...delegate } = cfg.delegate;
@@ -157,6 +181,12 @@ export async function createQvacEngine(
       modelType: "llm",
     });
   }
+  cfg.audit?.log("model_load", {
+    model: modelLabel,
+    model_type: "llm",
+    source: llmSource,
+    load_ms: Date.now() - llmLoadStart,
+  });
   const normalize = createNormalizer(cfg.grounding);
 
   return {
@@ -165,7 +195,11 @@ export async function createQvacEngine(
       const fastText = await runOcrWithParagraph(ocrModelId, image, false);
       let text = fastText;
       if (text.length < LOW_OCR_TEXT_THRESHOLD) {
-        const paragraphText = await runOcrWithParagraph(ocrModelId, image, true);
+        const paragraphText = await runOcrWithParagraph(
+          ocrModelId,
+          image,
+          true,
+        );
         text = paragraphText || text;
       }
       return { text, latencyMs: Date.now() - t0 };
@@ -196,6 +230,11 @@ export async function createQvacEngine(
       });
       let text = "";
       let emitted = 0;
+      // Inference-performance metrics for the audit log (TTFT, tokens, tokens/sec).
+      const explainStart = Date.now();
+      const promptTokens = Math.ceil(prompt.length / 4); // ~4 chars/token estimate
+      let completionTokens = 0;
+      let firstTokenAt: number | undefined;
       const tokenIterator = run.tokenStream[Symbol.asyncIterator]();
       const deadline = Date.now() + EXPLAIN_TIMEOUT_MS;
 
@@ -208,7 +247,7 @@ export async function createQvacEngine(
           console.warn(
             `[Pharos] MedPsy explanation timed out after ${EXPLAIN_TIMEOUT_MS}ms; using grounded fallback`,
           );
-          return { text: fallback };
+          return { text: fallback, model: modelLabel };
         }
 
         const next = await nextTokenWithTimeout(tokenIterator, remaining);
@@ -219,10 +258,12 @@ export async function createQvacEngine(
           console.warn(
             `[Pharos] MedPsy explanation timed out after ${EXPLAIN_TIMEOUT_MS}ms; using grounded fallback`,
           );
-          return { text: fallback };
+          return { text: fallback, model: modelLabel };
         }
         if (next.done) break;
 
+        if (firstTokenAt === undefined) firstTokenAt = Date.now();
+        completionTokens++;
         text += String(next.value ?? "");
         const cleaned = stripThinking(text);
         if (cleaned.length > emitted) {
@@ -231,13 +272,27 @@ export async function createQvacEngine(
         }
       }
 
+      const genMs = firstTokenAt !== undefined ? Date.now() - firstTokenAt : 0;
+      const perf = {
+        model: modelLabel,
+        promptTokens,
+        completionTokens,
+        ttftMs:
+          firstTokenAt !== undefined ? firstTokenAt - explainStart : undefined,
+        tokensPerSec:
+          completionTokens > 0 && genMs > 0
+            ? Math.round((completionTokens / genMs) * 1000)
+            : undefined,
+      };
       const cleaned = stripThinking(text).trim();
-      if (cleaned) return { text: cleaned };
-      return { text: groundedFallbackExplanation(interactions) };
+      if (cleaned) return { text: cleaned, ...perf };
+      return { text: groundedFallbackExplanation(interactions), ...perf };
     },
 
     async close() {
+      cfg.audit?.log("model_unload", { model: "OCR_LATIN_RECOGNIZER_1" });
       await unloadModel({ modelId: ocrModelId });
+      cfg.audit?.log("model_unload", { model: modelLabel });
       await unloadModel({ modelId: llmModelId });
     },
   };

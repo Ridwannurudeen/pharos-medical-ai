@@ -11,6 +11,7 @@
 // recognizer + CRAFT detector from S3 (~15MB, registry models); MedPsy is local. Cache them once,
 // then this runs offline.
 import { DatabaseSync } from "node:sqlite";
+import { writeFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import { createQvacEngine } from "../core/engine-qvac.ts";
@@ -37,7 +38,7 @@ const audit = createAuditLog({ deviceId: "validate-engine", sink, clock });
 console.log(
   "loading engine (OCR recognizer+detector from S3 on first run, MedPsy local)...",
 );
-const engine = await createQvacEngine({ grounding, medpsyModelSrc });
+const engine = await createQvacEngine({ grounding, medpsyModelSrc, audit });
 const scanPipeline = createScanPipeline({ engine, grounding, audit, clock });
 
 console.log(
@@ -75,4 +76,10 @@ console.log(
 
 await engine.close();
 db.close();
+
+// Persist the full run (model_load … scan … model_unload) as a committed demo-run artifact.
+const auditOut = join(ROOT, "docs", "sample-audit-run.jsonl");
+writeFileSync(auditOut, lines.join("\n") + "\n");
+console.log(`\nwrote ${auditOut} (${lines.length} events)`);
+
 process.exit(pass ? 0 : 1);

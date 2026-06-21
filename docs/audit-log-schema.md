@@ -27,6 +27,10 @@ Event types and their extra fields:
 | `model_registry_pull` | `model`, `peer_pubkey` (short), `size_mb`, `duration_ms` |
 | `scan_result` | `result_hash`, `severity`, `delegated` (bool), `abstained` (bool) |
 
+### Sample demo run
+
+A real run of the shipping engine (`spike/validate-engine.ts`, QVAC OCR + MedPsy-1.7B on WSL2) is committed at [`sample-audit-run.jsonl`](sample-audit-run.jsonl) — 11 events covering `model_load` ×2 (OCR + MedPsy), the grounded scan chain, `medpsy_end` with inference performance (`prompt_tokens`, `completion_tokens`, `ttft_ms`, `tokens_per_sec`), and `model_unload` ×2. Regenerate with `MEDPSY_1_7B=… node spike/validate-engine.ts`.
+
 ## Resource log — `resources.csv`
 
 Sampled ~1/sec during runs:

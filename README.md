@@ -35,6 +35,18 @@ The important product boundary: Pharos is a **documented interaction warning too
 
 For the retrieval step we made a deliberate safety choice: instead of vector RAG, Pharos uses **deterministic retrieval** against the bundled DDInter 2.0 database (normalize the drug to its generic name, then look up documented interactions). A medication-safety tool must never *invent* an interaction, so a grounded database lookup — which can only return documented facts or abstain — is safer here than similarity search over embeddings. The model explains the retrieved fact; it never sources the fact itself.
 
+## Remote APIs / network touchpoints
+
+Pharos is offline-first. There is **no remote inference API** — all OCR and MedPsy inference runs locally via QVAC. The only network touchpoints are one-time asset fetches and (optional) mesh discovery; after the first launch a scan is fully offline (provable with a zero-traffic capture):
+
+| Touchpoint | Service | When | Why |
+|---|---|---|---|
+| Model download | **Hugging Face** (`qvac/MedPsy-1.7B-GGUF`, `qvac/MedPsy-4B-GGUF`) | first launch only | fetch the MedPsy GGUF into the app's document dir; cached + offline after |
+| OCR model | **AWS S3** (QVAC registry — `OCR_LATIN_RECOGNIZER_1` + CRAFT detector, ~15 MB) | first OCR run only | QVAC pulls the OCR recognizer/detector; cached + offline after |
+| Mesh discovery | **Holepunch DHT** | mesh tier only (optional) | peer discovery/bootstrap to reach an anchor; the solo tier never uses it |
+
+Inference itself is never a remote API call: solo runs on-device; the mesh tier delegates over a direct P2P (Holepunch) connection to a peer you control, not a server.
+
 ## Repo structure
 
 ```
