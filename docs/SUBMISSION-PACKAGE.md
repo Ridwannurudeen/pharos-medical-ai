@@ -64,6 +64,8 @@ Submission should include or link to:
 - Any watch-item notes for OCR latency and CameraX reset logs.
 - Redacted git-history scan result from `npm run scan:history`.
 - Android validation matrix if any device beyond S25 is tested.
+- **Structured audit log from a real run:** [`sample-audit-run.jsonl`](sample-audit-run.jsonl) — model loads/unloads + per-inference performance (prompt/completion tokens, TTFT, tokens/sec); schema in [`audit-log-schema.md`](audit-log-schema.md).
+- **Remote APIs / network touchpoints:** documented in the README ("Remote APIs / network touchpoints") — HF (model download, first launch), S3 (OCR model, first run), Holepunch DHT (mesh discovery only); no remote inference API.
 
 ## Limitation framing
 

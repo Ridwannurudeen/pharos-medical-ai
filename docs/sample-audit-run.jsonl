@@ -1,0 +1,11 @@
+{"ts_iso":"2026-06-21T19:48:02.295Z","monotonic_ms":3865,"device_id":"validate-engine","event":"model_load","network_state":"offline","model":"OCR_LATIN_RECOGNIZER_1","model_type":"onnx-ocr","source":"s3-registry","load_ms":3852}
+{"ts_iso":"2026-06-21T19:48:06.940Z","monotonic_ms":8500,"device_id":"validate-engine","event":"model_load","network_state":"offline","model":"medpsy-1.7b-q4_k_m-imat.gguf","model_type":"llm","source":"local","load_ms":4635}
+{"ts_iso":"2026-06-21T19:48:06.940Z","monotonic_ms":8500,"device_id":"validate-engine","event":"ocr_start","network_state":"offline"}
+{"ts_iso":"2026-06-21T19:48:08.048Z","monotonic_ms":9608,"device_id":"validate-engine","event":"ocr_end","network_state":"offline","text_len":13,"latency_ms":1107}
+{"ts_iso":"2026-06-21T19:48:08.054Z","monotonic_ms":9614,"device_id":"validate-engine","event":"normalize_result","network_state":"offline","raw_text":"ASPIRIN 81 mg","generic":"acetylsalicylic acid","matched":true}
+{"ts_iso":"2026-06-21T19:48:08.057Z","monotonic_ms":9617,"device_id":"validate-engine","event":"ddinter_lookup","network_state":"offline","drug_a":"acetylsalicylic acid","drug_b":"Warfarin","severity":"Major","ddinter_id_a":"DDInter20","ddinter_id_b":"DDInter1951"}
+{"ts_iso":"2026-06-21T19:48:08.057Z","monotonic_ms":9617,"device_id":"validate-engine","event":"medpsy_start","network_state":"offline","delegated":false}
+{"ts_iso":"2026-06-21T19:48:27.999Z","monotonic_ms":29559,"device_id":"validate-engine","event":"medpsy_end","network_state":"offline","delegated":false,"model":"medpsy-1.7b-q4_k_m-imat.gguf","prompt_tokens":85,"completion_tokens":440,"ttft_ms":535,"tokens_per_sec":23}
+{"ts_iso":"2026-06-21T19:48:27.999Z","monotonic_ms":29559,"device_id":"validate-engine","event":"scan_result","network_state":"offline","abstained":false,"severity":"Major","delegated":false}
+{"ts_iso":"2026-06-21T19:48:28.000Z","monotonic_ms":29560,"device_id":"validate-engine","event":"model_unload","network_state":"offline","model":"OCR_LATIN_RECOGNIZER_1"}
+{"ts_iso":"2026-06-21T19:48:28.054Z","monotonic_ms":29614,"device_id":"validate-engine","event":"model_unload","network_state":"offline","model":"medpsy-1.7b-q4_k_m-imat.gguf"}
