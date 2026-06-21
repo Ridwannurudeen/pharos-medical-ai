@@ -15,6 +15,17 @@ framing. It is intentionally conservative: it claims only what was validated or 
 - Android validation matrix: [`docs/ANDROID-VALIDATION-MATRIX.md`](ANDROID-VALIDATION-MATRIX.md)
 - Asset update plan: [`docs/ASSET-UPDATE-PLAN.md`](ASSET-UPDATE-PLAN.md)
 
+## Track & how we use QVAC
+
+- **Track: Mobile** — a phone-first, on-device medical AI for real consumer hardware, validated on a Samsung S25 Ultra. The optional mesh tier also exercises the **General Purpose** track (a laptop anchor running the larger MedPsy-4B).
+- **All AI inference runs on QVAC** (`@qvac/sdk`): QVAC OCR reads the label, and MedPsy via QVAC `completion` writes the plain-language explanation — on-device for the solo tier, or delegated to a peer anchor's MedPsy-4B for the mesh tier. No cloud inference.
+- **Retrieval is deliberately deterministic, not vector RAG.** Interaction facts come from a bundled DDInter 2.0 lookup keyed by the normalized generic name. A medication-safety tool must never *invent* an interaction, so a grounded database lookup — which can only return a documented fact or abstain — is safer here than embedding similarity search. The model explains the retrieved fact; it never sources it.
+
+## Where this scores (honest)
+
+- **Strong:** Innovation (cross-device P2P mesh delegation, proven on two physical machines); Performance (phone runs MedPsy-1.7B and delegates hard cases to a 4B anchor — real P2P load distribution on constrained hardware); Model Usage (MedPsy-1.7B + MedPsy-4B across the two tiers); Artifact Quality (audit + resource logs, reproducibility docs, demo video, hardware proof); Complexity & UX (solo + mesh, a real medical use case, S25-validated).
+- **Not our focus:** multi-agent orchestration / LLM tool-calling. Pharos is a grounded safety pipeline plus P2P delegation by design — we do not claim agentic tool-calling.
+
 ## Validated claims
 
 These are safe to use in submission materials:
